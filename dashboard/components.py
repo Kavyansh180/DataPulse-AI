@@ -233,12 +233,16 @@ def render_column_quality_bar(metrics: List[Dict[str, Any]]) -> Optional[go.Figu
 
 
 def display_ai_analysis_report(analysis: Dict[str, Any]) -> None:
-    """Format and display structured AI Root-Cause Analysis in Streamlit."""
+    """Format and display structured AI Root-Cause Analysis with TicketVault aesthetics."""
     if analysis.get("is_sample_demo"):
-        st.warning(
-            "ℹ️ **Demonstration Sample Report (Pre-recorded)** — This is a curated sample diagnostic report "
-            "illustrating DataPulse AI's grounded root-cause reasoning. It is presented for recruiter/demo exploration "
-            "and does not require a live LLM API key or credit."
+        st.markdown(
+            """
+            <div style="background: rgba(225, 29, 72, 0.08); border: 1px solid rgba(225, 29, 72, 0.3); border-radius: 12px; padding: 10px 16px; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;">
+                <span class="tv-badge-crimson">DEMO REPORT</span>
+                <span style="color: #cbd5e1; font-size: 0.88rem;">Curated diagnostic report illustrating grounded root-cause reasoning without requiring live LLM API credits.</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
     assessment = analysis.get("overall_assessment", "No assessment provided.")
@@ -247,54 +251,79 @@ def display_ai_analysis_report(analysis: Dict[str, Any]) -> None:
     recommendations = analysis.get("recommendations", [])
     limitations = analysis.get("limitations", [])
 
-    st.info(f"**Executive Assessment**\n\n{assessment}")
+    st.markdown(
+        f"""
+        <div class="tv-card" style="border-left: 4px solid var(--dp-accent-crimson); margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span class="tv-badge-crimson">EXECUTIVE ASSESSMENT</span>
+            </div>
+            <p style="color: #f8fafc; font-size: 0.95rem; line-height: 1.5; margin: 0;">
+                {assessment}
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2, gap="medium")
 
     with col1:
-        st.subheader("🔍 Key Findings (Empirical)")
+        st.markdown("### 🔍 Key Findings (Empirical)")
         if findings:
             for f in findings:
-                st.markdown(f"- {f}")
+                st.markdown(
+                    f"""
+                    <div style="background: #0d1422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; color: #cbd5e1; font-size: 0.88rem;">
+                        • {f}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
         else:
-            st.info("No specific empirical findings highlighted.")
+            st.caption("No specific empirical findings highlighted.")
 
-        st.subheader("💡 Root Cause Analysis")
+        st.markdown("### 💡 Root Cause Hypotheses")
         if causes:
             for idx, c in enumerate(causes, 1):
                 cause_text = c.get("cause", "")
                 is_hyp = c.get("is_hypothesis", True)
                 evidence = c.get("supporting_evidence", "")
-                tag_label = "HYPOTHESIS" if is_hyp else "OBSERVED FACT"
+                badge_html = '<span class="tv-badge-purple">HYPOTHESIS</span>' if is_hyp else '<span class="tv-badge-emerald">OBSERVED FACT</span>'
 
-                with st.expander(f"[{tag_label}] {idx}. {cause_text[:55]}...", expanded=True):
-                    st.write(f"**Cause**: {cause_text}")
-                    st.caption(f"Evidence: {evidence}")
+                with st.expander(f"#{idx} {cause_text[:50]}...", expanded=True):
+                    st.markdown(f"{badge_html} **{cause_text}**", unsafe_allow_html=True)
+                    st.caption(f"Supporting Evidence: {evidence}")
         else:
-            st.info("No root causes identified.")
+            st.caption("No root causes identified.")
 
     with col2:
-        st.subheader("🛠️ Prioritized Remediation Actions")
+        st.markdown("### 🛠️ Prioritized Recommendations")
         if recommendations:
             for r in recommendations:
                 action = r.get("action", "")
                 priority = str(r.get("priority", "medium")).upper()
                 evidence = r.get("evidence", "")
 
-                msg = f"**[{priority} PRIORITY]** {action}\n\n*Evidence: {evidence}*"
-                if priority == "HIGH":
-                    st.error(msg)
-                elif priority == "MEDIUM":
-                    st.warning(msg)
-                else:
-                    st.info(msg)
-        else:
-            st.info("No recommendations provided.")
+                badge_cls = "tv-badge-crimson" if priority == "HIGH" else ("tv-badge-amber" if priority == "MEDIUM" else "tv-badge-cyan")
 
-        st.subheader("⚠️ Limitations & Uncertainties")
+                st.markdown(
+                    f"""
+                    <div class="tv-card" style="padding: 1rem; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <span class="{badge_cls}">{priority} PRIORITY</span>
+                        </div>
+                        <p style="color: #f8fafc; font-size: 0.9rem; font-weight: 600; margin: 0 0 4px 0;">{action}</p>
+                        <p style="color: #64748b; font-size: 0.8rem; margin: 0;">Evidence: {evidence}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.caption("No recommendations provided.")
+
         if limitations:
+            st.markdown("### ⚠️ Limitations & Notes")
             for lim in limitations:
                 st.caption(f"• *{lim}*")
-        else:
-            st.info("No specific uncertainties reported.")
+
 

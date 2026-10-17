@@ -1,4 +1,6 @@
-"""DataPulse AI — Authentication Landing Page & Guest Mode Onboarding."""
+"""DataPulse AI — Authentication Landing Page & Guest Mode Onboarding.
+TicketVault-inspired dark cinema aesthetics, clean typography, and zero-clutter layout.
+"""
 
 import re
 from typing import Optional
@@ -14,63 +16,117 @@ def is_valid_email(email: str) -> bool:
 
 
 def render_auth_landing_page(client: DataPulseApiClient) -> None:
-    """Render the dark-themed Authentication Landing Page with Sign-In, Registration, and Guest Mode."""
+    """Render the TicketVault-inspired Authentication Landing Page."""
 
-    # Top Hero Branding
-    col_logo, col_badge = st.columns([3, 1])
-    with col_logo:
-        st.title("⚡ DataPulse AI")
-        st.subheader("Enterprise Data Quality Monitoring & Safe Remediation")
-    with col_badge:
-        try:
-            health = client.check_health()
-            st.success(f"● {health.get('app', 'DataPulse AI')} Online")
-        except Exception:
-            st.warning("● Offline Mode Available")
+    # -------------------------------------------------------------------------
+    # 1. Connectivity Check for Header Status Pill
+    # -------------------------------------------------------------------------
+    backend_online = False
+    try:
+        health = client.check_health()
+        backend_online = bool(health.get("status") == "healthy")
+    except Exception:
+        backend_online = False
 
+    status_pill = (
+        '<span class="tv-badge-emerald">● AWS BACKEND ONLINE</span>'
+        if backend_online
+        else '<span class="tv-badge-cyan">● GUEST SANDBOX READY</span>'
+    )
+
+    # -------------------------------------------------------------------------
+    # 2. TicketVault-Inspired Featured Hero Spotlight Banner
+    # -------------------------------------------------------------------------
     st.markdown(
-        "<p style='color: #94a3b8; font-size: 1.1rem; margin-top: -0.5rem;'>"
-        "Automated statistical profiling, explainable quality scoring, and safe non-destructive data remediation "
-        "backed by Neon PostgreSQL and Amazon S3."
-        "</p>",
+        f"""
+        <div class="tv-hero-banner">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span class="tv-badge-crimson">★ ENTERPRISE GRADE</span>
+                    <span class="tv-badge-cyan">0–100 QUALITY SCORING</span>
+                    <span class="tv-badge-emerald">SAFE REMEDIATION</span>
+                </div>
+                <div>{status_pill}</div>
+            </div>
+            <h1 style="font-size: 2.35rem; font-weight: 800; letter-spacing: -0.035em; margin: 0 0 10px 0; color: #ffffff;">
+                Next-Gen Data Quality Intelligence
+            </h1>
+            <p style="color: #94a3b8; font-size: 1.05rem; margin: 0 0 18px 0; max-width: 820px; line-height: 1.5;">
+                Automated statistical profiling, explainable quality scoring, and safe non-destructive CSV remediation 
+                backed by Neon PostgreSQL and Amazon S3.
+            </p>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span class="tv-filter-chip">⚡ 1M+ Rows Handled</span>
+                <span class="tv-filter-chip">🔍 IQR Outlier Bounds</span>
+                <span class="tv-filter-chip">🛡️ Cell-Level Diffs</span>
+                <span class="tv-filter-chip">🔒 Zero Disk Leakage</span>
+            </div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
-    st.divider()
-
-    # Main Split Hero: Value Proposition (Left) vs. Auth & Guest Actions (Right)
-    col_pitch, col_card = st.columns([1.2, 1.1], gap="large")
+    # -------------------------------------------------------------------------
+    # 3. Main Split Content: Highlights (Left) vs. Onboarding & Auth (Right)
+    # -------------------------------------------------------------------------
+    col_pitch, col_card = st.columns([1.25, 1.15], gap="large")
 
     with col_pitch:
-        st.markdown("### 🎯 Platform Capabilities")
-
         st.markdown(
             """
-            <div style="background-color: #131d2e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;">
-                <h4 style="color: #38bdf8; margin-top: 0;">🛡️ Deterministic Quality Scoring (0–100)</h4>
-                <p style="color: #cbd5e1; font-size: 0.92rem; margin-bottom: 0;">
-                    Calculates explainable quality metrics across completeness, uniqueness, validity, and consistency dimensions without black-box drift guesswork.
+            <div style="margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #ffffff;">⚡ Core Capabilities</h3>
+                <p style="color: #64748b; font-size: 0.88rem; margin: 4px 0 0 0;">Engineered for production data engineering and analytics teams</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # Feature Card 1
+        st.markdown(
+            """
+            <div class="tv-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <span class="tv-badge-crimson">ALGORITHMIC</span>
+                    <span style="color: #10b981; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;">100% EXPLAINABLE</span>
+                </div>
+                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">Deterministic Quality Scoring (0–100)</h4>
+                <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.45; margin: 0;">
+                    Calculates explainable scores across completeness, uniqueness, validity, and consistency dimensions without black-box drift guesswork.
                 </p>
             </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-            <div style="background-color: #131d2e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;">
-                <h4 style="color: #38bdf8; margin-top: 0;">📈 Statistical Anomaly & Outlier Detection</h4>
-                <p style="color: #cbd5e1; font-size: 0.92rem; margin-bottom: 0;">
-                    Automated IQR quartile bounds identify numerical skew and corrupt transaction spikes before they degrade downstream machine learning or BI models.
+        # Feature Card 2
+        st.markdown(
+            """
+            <div class="tv-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <span class="tv-badge-cyan">STATISTICAL</span>
+                    <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;">AUTOMATED</span>
+                </div>
+                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">IQR Anomaly & Defect Detection</h4>
+                <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.45; margin: 0;">
+                    Automated quartile bounds flag corrupt transaction spikes, numerical skew, and duplicate rows before they degrade downstream pipelines.
                 </p>
             </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-            <div style="background-color: #131d2e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;">
-                <h4 style="color: #38bdf8; margin-top: 0;">🛠️ Safe Non-Destructive Remediation</h4>
-                <p style="color: #cbd5e1; font-size: 0.92rem; margin-bottom: 0;">
-                    Preview proposed transformations (imputation, deduplication, whitespace trimming, type coercion) on a separate copy with cell-level diffs before applying.
-                </p>
-            </div>
-
-            <div style="background-color: #131d2e; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.25rem;">
-                <h4 style="color: #38bdf8; margin-top: 0;">🔒 Secure JWT Multi-Tenant Ownership</h4>
-                <p style="color: #cbd5e1; font-size: 0.92rem; margin-bottom: 0;">
-                    Argon2id password hashing and short-lived JWT authorization guarantee strict dataset ownership and tenant isolation.
+        # Feature Card 3
+        st.markdown(
+            """
+            <div class="tv-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <span class="tv-badge-emerald">GOVERNANCE</span>
+                    <span style="color: #34d399; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;">IMMUTABLE</span>
+                </div>
+                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">Safe Non-Destructive Remediation</h4>
+                <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.45; margin: 0;">
+                    Preview proposed transformations (imputation, deduplication, whitespace trimming) with cell-level diffs before generating versioned S3 snapshots.
                 </p>
             </div>
             """,
@@ -78,7 +134,51 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
         )
 
     with col_card:
+        # ---------------------------------------------------------------------
+        # Quick Instant Guest Sandbox Card (TicketVault Highlight Card)
+        # ---------------------------------------------------------------------
+        st.markdown(
+            """
+            <div class="tv-card" style="border-color: rgba(225, 29, 72, 0.35); background: linear-gradient(135deg, rgba(225, 29, 72, 0.08) 0%, rgba(13, 19, 31, 0.95) 100%);">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="font-size: 1.25rem;">🚀</span>
+                    <h3 style="color: #ffffff; margin: 0; font-size: 1.15rem; font-weight: 800;">Instant Sandbox Evaluation</h3>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.45; margin-bottom: 12px;">
+                    Evaluate DataPulse AI immediately in an isolated, in-memory sandbox. Includes preloaded e-commerce transactions, automated profiling, and remediation previews.
+                </p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+                    <span class="tv-badge-crimson">ZERO REGISTRATION</span>
+                    <span class="tv-badge-cyan">PRELOADED DATASET</span>
+                    <span class="tv-badge-emerald">100% IN-MEMORY</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        if st.button("⚡ Launch Free Guest Sandbox Session", type="primary", use_container_width=True, key="btn_hero_guest"):
+            st.session_state.is_guest = True
+            st.session_state.auth_token = None
+            st.session_state.user_profile = {
+                "id": 0,
+                "email": "guest@datapulse.demo",
+                "full_name": "Guest Explorer",
+            }
+            client.set_token(None)
+            st.success("Launching isolated Guest Sandbox...")
+            st.rerun()
+
+        st.markdown(
+            "<div style='text-align: center; color: #64748b; font-size: 0.78rem; margin: 1.25rem 0 1rem 0; font-weight: 700; letter-spacing: 0.1em;'>"
+            "─── OR SIGN IN TO YOUR WORKSPACE ───"
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
+        # ---------------------------------------------------------------------
         # Auth Container Box
+        # ---------------------------------------------------------------------
         with st.container():
             auth_tab_login, auth_tab_register = st.tabs(["🔑 Sign In", "✨ Create Account"])
 
@@ -86,9 +186,6 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
             # 1. Sign In Form
             # -----------------------------------------------------------------
             with auth_tab_login:
-                st.markdown("#### Welcome Back")
-                st.caption("Sign in to access your registered datasets and profiling history.")
-
                 with st.form("login_form", clear_on_submit=False):
                     login_email = st.text_input(
                         "Email Address",
@@ -102,8 +199,8 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
                         key="login_password_input",
                     )
                     submit_login = st.form_submit_button(
-                        "Sign In",
-                        type="primary",
+                        "Sign In to Workspace",
+                        type="secondary",
                         use_container_width=True,
                     )
 
@@ -139,9 +236,6 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
             # 2. Registration Form
             # -----------------------------------------------------------------
             with auth_tab_register:
-                st.markdown("#### Create Your Account")
-                st.caption("Register for a dedicated multi-tenant dataset workspace.")
-
                 with st.form("register_form", clear_on_submit=False):
                     reg_name = st.text_input(
                         "Full Name",
@@ -161,7 +255,7 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
                     )
                     submit_register = st.form_submit_button(
                         "Create Account & Sign In",
-                        type="primary",
+                        type="secondary",
                         use_container_width=True,
                     )
 
@@ -200,48 +294,3 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
                                     st.error(f"Validation Error: {exc.message}")
                                 else:
                                     st.error(f"Registration failed: {exc.message}")
-
-        # ---------------------------------------------------------------------
-        # 3. Path B: Continue as Guest (Recruiter Demo Sandbox)
-        # ---------------------------------------------------------------------
-        st.markdown(
-            "<div style='text-align: center; color: #64748b; font-size: 0.85rem; margin: 1.25rem 0; font-weight: 600; letter-spacing: 0.08em;'>"
-            "─── OR EXPLORE WITHOUT AN ACCOUNT ───"
-            "</div>",
-            unsafe_allow_html=True,
-        )
-
-        with st.container():
-            st.markdown(
-                """
-                <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
-                            border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 1.25rem; margin-bottom: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                        <span style="font-size: 1.2rem;">🚀</span>
-                        <h4 style="color: #f8fafc; margin: 0; font-size: 1.05rem;">Continue as Guest</h4>
-                    </div>
-                    <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.4; margin-bottom: 0.75rem;">
-                        Evaluate DataPulse AI immediately. Explore automated statistical profiling, quality score breakdowns,
-                        outlier detection, and safe remediation previews in an isolated, in-memory sandbox.
-                    </p>
-                    <ul style="color: #64748b; font-size: 0.82rem; margin-bottom: 0; padding-left: 1.2rem;">
-                        <li>Zero registration or credentials required</li>
-                        <li>Built-in synthetic e-commerce dataset included</li>
-                        <li>Zero cloud persistence — your data stays strictly in memory</li>
-                    </ul>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            if st.button("⚡ Launch Guest Sandbox Session", type="secondary", use_container_width=True):
-                st.session_state.is_guest = True
-                st.session_state.auth_token = None
-                st.session_state.user_profile = {
-                    "id": 0,
-                    "email": "guest@datapulse.demo",
-                    "full_name": "Guest Explorer",
-                }
-                client.set_token(None)
-                st.success("Launching isolated Guest Sandbox...")
-                st.rerun()

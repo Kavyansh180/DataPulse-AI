@@ -145,16 +145,18 @@ if not st.session_state.auth_token and not st.session_state.is_guest:
 # 4. Persistent Left Sidebar Navigation
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    st.title("⚡ DataPulse AI")
-    st.caption("DATA QUALITY INTELLIGENCE")
+    render_brand_sidebar()
 
     # Mode Indicator & Sign-Out / Exit Button
     if st.session_state.is_guest:
         st.markdown(
             """
-            <div style="background-color: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 0.75rem;">
-                <div style="color: #38bdf8; font-weight: 600; font-size: 0.9rem;">👀 Guest Sandbox Active</div>
-                <div style="color: #94a3b8; font-size: 0.78rem;">Isolated In-Memory Sandbox • No Cloud Writes</div>
+            <div style="background: rgba(225, 29, 72, 0.08); border: 1px solid rgba(225, 29, 72, 0.3); border-radius: 12px; padding: 0.75rem 0.95rem; margin-bottom: 0.75rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                    <span style="color: #f43f5e; font-weight: 700; font-size: 0.88rem;">👀 Guest Sandbox</span>
+                    <span class="tv-badge-crimson" style="padding: 2px 7px; font-size: 10px;">ISOLATED</span>
+                </div>
+                <div style="color: #94a3b8; font-size: 0.75rem;">In-Memory Execution • No Cloud Writes</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -171,9 +173,12 @@ with st.sidebar:
         user_email = user.get("email", "")
         st.markdown(
             f"""
-            <div style="background-color: rgba(37, 99, 235, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 0.75rem;">
-                <div style="color: #60a5fa; font-weight: 600; font-size: 0.9rem;">👤 {user_name}</div>
-                <div style="color: #94a3b8; font-size: 0.78rem;">{user_email} • Tenant Owner</div>
+            <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px; padding: 0.75rem 0.95rem; margin-bottom: 0.75rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                    <span style="color: #38bdf8; font-weight: 700; font-size: 0.88rem;">👤 {user_name}</span>
+                    <span class="tv-badge-cyan" style="padding: 2px 7px; font-size: 10px;">TENANT</span>
+                </div>
+                <div style="color: #94a3b8; font-size: 0.75rem;">{user_email}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -191,9 +196,15 @@ with st.sidebar:
         health = client.check_health()
         app_name = health.get("app", "DataPulse AI")
         app_ver = health.get("version", "0.1.0")
-        st.success(f"● {app_name} v{app_ver} Online")
+        st.markdown(
+            f'<div style="text-align: center; margin: 4px 0 10px 0;"><span class="tv-badge-emerald">● {app_name} v{app_ver} Online</span></div>',
+            unsafe_allow_html=True,
+        )
     except (DashboardApiError, Exception):
-        st.error("● Backend Offline")
+        st.markdown(
+            '<div style="text-align: center; margin: 4px 0 10px 0;"><span class="tv-badge-amber">● Backend Offline (Sandbox Mode)</span></div>',
+            unsafe_allow_html=True,
+        )
 
     st.divider()
     st.caption("PLATFORM NAVIGATION")
@@ -223,7 +234,8 @@ with st.sidebar:
             st.session_state.backend_url = new_url
             st.rerun()
 
-        st.caption("AWS Production Endpoint: https://e3bllh77q4.execute-api.ap-south-1.amazonaws.com")
+        st.caption("AWS Production Endpoint:")
+        st.code("https://e3bllh77q4.execute-api.ap-south-1.amazonaws.com", language="text")
         if st.button("🔗 Connect to Production AWS API", key="btn_connect_prod_aws", use_container_width=True):
             st.session_state.backend_url = "https://e3bllh77q4.execute-api.ap-south-1.amazonaws.com"
             st.rerun()
@@ -260,26 +272,59 @@ def handle_api_error(exc: DashboardApiError) -> None:
 if active_view == "Overview & Ingestion":
     render_header(
         title="Overview & Dataset Ingestion",
-        subtitle="Upload raw datasets for automated statistical profiling, explainable quality scoring, and anomaly detection.",
+        subtitle="Upload datasets for automated statistical profiling, explainable quality scoring, and anomaly detection.",
         icon="📊",
+        badge_text="LIVE MONITORING",
     )
 
     # -------------------------------------------------------------------------
     # A. Guest Mode Experience (Isolated In-Memory Sandbox)
     # -------------------------------------------------------------------------
     if st.session_state.is_guest:
-        st.info(
-            "**Welcome to DataPulse AI Guest Sandbox** — Explore automated data profiling without cloud storage writes. "
-            "Ingest our curated synthetic dataset or upload a small CSV to calculate explainable quality scores (0–100), "
-            "detect IQR outliers, and preview data remediation."
+        # TicketVault Spotlight Dataset Card
+        st.markdown(
+            """
+            <div class="tv-hero-banner" style="padding: 1.5rem 1.75rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="tv-badge-crimson">★ FEATURED DATASET</span>
+                        <span class="tv-badge-cyan">SYNTHETIC E-COMMERCE</span>
+                        <span class="tv-badge-emerald">31 ROWS • 6 COLS</span>
+                    </div>
+                    <span class="tv-badge-amber">3 DETECTED ISSUES</span>
+                </div>
+                <h3 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em;">
+                    Synthetic Customer Orders & Transactions
+                </h3>
+                <p style="color: #94a3b8; font-size: 0.92rem; margin: 0 0 12px 0; line-height: 1.45;">
+                    Curated e-commerce orders with missing emails, duplicate rows, whitespace anomalies, and extreme transaction amounts ($1.25M outlier).
+                </p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tv-filter-chip">📍 31 Profiled Rows</span>
+                    <span class="tv-filter-chip">⏱ Sub-Second In-Memory Profiling</span>
+                    <span class="tv-filter-chip">🛡️ Non-Destructive Cleaning</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-        col_g_load, col_g_up = st.columns([1.2, 1.4], gap="large")
+        col_g_load, col_g_up = st.columns([1.1, 1.2], gap="large")
 
         with col_g_load:
-            st.markdown("#### ⚡ Synthetic Sample Dataset")
-            st.caption("Curated e-commerce transactions featuring missing emails, duplicates, whitespace anomalies, and extreme order amounts ($1.25M).")
-            if st.button("📊 Profile Synthetic E-Commerce Dataset", type="primary", use_container_width=True):
+            st.markdown(
+                """
+                <div class="tv-card" style="margin-bottom: 0.5rem;">
+                    <span class="tv-badge-crimson" style="margin-bottom: 8px;">ONE-CLICK RUN</span>
+                    <h4 style="margin: 4px 0 6px 0; color: #ffffff; font-size: 1.05rem;">Profile Preloaded Synthetic Data</h4>
+                    <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 12px;">
+                        Execute automated statistical profiling, calculate 0–100 quality scores, and detect anomalies.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button("📊 Profile Synthetic Dataset", type="primary", use_container_width=True):
                 with st.spinner("Executing in-memory statistical profiling..."):
                     df = load_default_guest_dataset()
                     profile_res = profile_guest_dataset(df)
@@ -287,8 +332,18 @@ if active_view == "Overview & Ingestion":
                     st.success(f"✓ Profiled {len(df)} rows! Quality Score: {profile_res['quality_score']}/100")
 
         with col_g_up:
-            st.markdown("#### 📁 Upload Custom CSV (Sandbox Mode)")
-            st.caption("Upload a small CSV dataset (< 2MB) to test automated profiling in this temporary sandbox.")
+            st.markdown(
+                """
+                <div class="tv-card" style="margin-bottom: 0.5rem;">
+                    <span class="tv-badge-cyan" style="margin-bottom: 8px;">CUSTOM UPLOAD</span>
+                    <h4 style="margin: 4px 0 6px 0; color: #ffffff; font-size: 1.05rem;">Evaluate Your Own CSV</h4>
+                    <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 12px;">
+                        Upload a small CSV (&lt; 2MB) to evaluate profiling in this temporary sandbox.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             guest_uploaded_file = st.file_uploader(
                 "Upload small CSV file for sandbox",
                 type=["csv"],
@@ -317,7 +372,15 @@ if active_view == "Overview & Ingestion":
         # Display Quick Results KPI Grid for Guest
         g_data = st.session_state.guest_data
         st.divider()
-        st.subheader("📋 Sandbox Quality Overview")
+        st.markdown(
+            """
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #ffffff;">📋 Quality Audit Overview</h3>
+                <span class="tv-badge-emerald">AUTOMATED AUDIT COMPLETE</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         kpi1, kpi2, kpi3, kpi4 = st.columns(4)
         kpi1.metric("Overall Quality Score", f"{g_data['quality_score']}/100")
@@ -333,55 +396,71 @@ if active_view == "Overview & Ingestion":
             if comp_fig:
                 st.plotly_chart(comp_fig, use_container_width=True)
 
-        st.caption("👉 Switch to **Quality Deep-Dive** in the sidebar to inspect column distributions and detected issues!")
+        st.markdown(
+            """
+            <div style="background: rgba(13, 19, 31, 0.85); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="tv-badge-crimson">NEXT STEP</span>
+                    <span style="color: #cbd5e1; font-size: 0.88rem; font-weight: 500;">Inspect column defects or simulate safe data cleaning</span>
+                </div>
+                <div style="color: #38bdf8; font-size: 0.85rem; font-weight: 600;">Sidebar: 🔍 Quality Deep-Dive or 🛠️ Remediation</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     # -------------------------------------------------------------------------
     # B. Authenticated User Experience (Tenant-Scoped AWS Ingestion)
     # -------------------------------------------------------------------------
     else:
-        st.info(
-            "**Welcome to DataPulse AI Enterprise** — Ingest CSV datasets to automatically calculate "
-            "deterministic 0–100 quality scores, detect numeric IQR outliers, and safely store immutable snapshots in private S3."
+        st.markdown(
+            """
+            <div class="tv-card" style="margin-bottom: 1.25rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span class="tv-badge-cyan">ENTERPRISE INGESTION</span>
+                    <span class="tv-badge-emerald">S3 PRIVATE STORAGE</span>
+                </div>
+                <h3 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.2rem; font-weight: 700;">Upload CSV Dataset</h3>
+                <p style="color: #94a3b8; font-size: 0.88rem; margin: 0 0 12px 0;">
+                    Drag and drop your CSV dataset (up to 10MB) for automated statistical profiling, quality scoring, and S3 persistence.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-        st.divider()
+        uploaded_file = st.file_uploader(
+            "Choose a CSV file",
+            type=["csv"],
+            help="Upload a standard CSV file (limit 10MB to match cloud API Gateway limits)",
+            label_visibility="collapsed",
+        )
 
-        col_upload, col_meta = st.columns([1.6, 1.2], gap="large")
-
-        with col_upload:
-            st.subheader("📁 Upload CSV Dataset")
-            st.caption("Drag and drop or browse for a comma-separated CSV file (up to 10MB on AWS API Gateway).")
-            uploaded_file = st.file_uploader(
-                "Choose a CSV file",
-                type=["csv"],
-                help="Upload a standard CSV file (limit 10MB to match cloud API Gateway limits)",
-                label_visibility="collapsed",
-            )
-
-        with col_meta:
-            st.subheader("🏷️ Ingestion Metadata (Optional)")
-            st.caption("Customize dataset naming, semantic versioning, or schema validation rules.")
-            custom_dataset_name = st.text_input(
-                "Dataset Name",
-                placeholder="e.g., customer_transactions",
-                help="Leave blank to use original uploaded file name",
-            )
-            custom_description = st.text_input(
-                "Description (Optional)",
-                placeholder="e.g., Customer transaction records",
-                help="Optional description of dataset",
-            )
-            custom_version_tag = st.text_input(
-                "Version Tag",
-                placeholder="e.g., v1.0.0",
-                help="Leave blank for an automatic timestamped version tag",
-            )
-            custom_schema_str = st.text_area(
-                "Expected Schema (JSON, Optional)",
-                placeholder='{"columns": {"id": "int64", "email": "str", "salary": "float64"}}',
-                help="Optional Pandera schema definition for strict column type validation",
-                height=85,
-            )
+        with st.expander("⚙️ Optional Ingestion Metadata (Name, Version, JSON Schema)", expanded=False):
+            col_m1, col_m2 = st.columns(2)
+            with col_m1:
+                custom_dataset_name = st.text_input(
+                    "Dataset Name",
+                    placeholder="e.g., customer_transactions",
+                    help="Leave blank to use original uploaded file name",
+                )
+                custom_version_tag = st.text_input(
+                    "Version Tag",
+                    placeholder="e.g., v1.0.0",
+                    help="Leave blank for an automatic timestamped version tag",
+                )
+            with col_m2:
+                custom_description = st.text_input(
+                    "Description",
+                    placeholder="e.g., Customer transaction records",
+                    help="Optional description of dataset",
+                )
+                custom_schema_str = st.text_area(
+                    "Expected Schema (JSON, Optional)",
+                    placeholder='{"columns": {"id": "int64", "email": "str", "salary": "float64"}}',
+                    help="Optional Pandera schema definition for strict column type validation",
+                    height=70,
+                )
 
         if uploaded_file is not None:
             if st.button("🚀 Upload & Execute Profiling", type="primary", use_container_width=True):
@@ -470,6 +549,7 @@ elif active_view == "Quality Deep-Dive":
         title="Quality Profiling Deep-Dive",
         subtitle="Inspect granular column metrics, statistical quartiles, and detected quality issues.",
         icon="🔍",
+        badge_text="COLUMN AUDIT",
     )
 
     if st.session_state.is_guest:
@@ -504,7 +584,15 @@ elif active_view == "Quality Deep-Dive":
                 if comp_fig:
                     st.plotly_chart(comp_fig, use_container_width=True)
                 if g_data.get("score_explanation"):
-                    st.info(f"**Score Deductions & Reasons**: {g_data['score_explanation']}")
+                    st.markdown(
+                        f"""
+                        <div style="background: rgba(13, 19, 31, 0.85); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 16px; margin-top: 10px;">
+                            <span class="tv-badge-cyan" style="margin-bottom: 6px;">SCORE EXPLANATION</span>
+                            <p style="color: #cbd5e1; font-size: 0.88rem; margin: 4px 0 0 0;">{g_data['score_explanation']}</p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
         with tab_columns:
             metrics = g_data.get("metrics", [])
@@ -590,7 +678,15 @@ elif active_view == "Quality Deep-Dive":
                         if comp_fig:
                             st.plotly_chart(comp_fig, use_container_width=True)
                         if summary_info.get("score_explanation"):
-                            st.info(f"**Score Deductions & Reasons**: {summary_info.get('score_explanation')}")
+                            st.markdown(
+                                f"""
+                                <div style="background: rgba(13, 19, 31, 0.85); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 16px; margin-top: 10px;">
+                                    <span class="tv-badge-cyan" style="margin-bottom: 6px;">SCORE EXPLANATION</span>
+                                    <p style="color: #cbd5e1; font-size: 0.88rem; margin: 4px 0 0 0;">{summary_info.get('score_explanation')}</p>
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
 
                 with tab_columns:
                     metrics = client.get_run_metrics(selected_run_id)
@@ -623,14 +719,28 @@ elif active_view == "Historical Run Comparison":
         title="Historical Profiling Run Comparison",
         subtitle="Evaluate data drift, score progression, schema changes, and resolved issues between two profiling runs.",
         icon="⚖️",
+        badge_text="REGRESSION & DRIFT",
     )
 
     if st.session_state.is_guest:
-        st.info(
-            "ℹ️ **Account Feature: Historical Run Tracking**\n\n"
-            "Guest sessions operate in a temporary in-memory sandbox. Historical run comparison compares "
-            "version snapshots and quality deltas stored persistently in Neon PostgreSQL.\n\n"
-            "👉 To monitor production datasets and track quality deltas across version releases, sign out and create an account."
+        st.markdown(
+            """
+            <div class="tv-card" style="border-color: rgba(225, 29, 72, 0.35); background: linear-gradient(135deg, rgba(225, 29, 72, 0.08) 0%, rgba(13, 19, 31, 0.95) 100%); margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span class="tv-badge-crimson">ENTERPRISE FEATURE</span>
+                    <h3 style="color: #ffffff; margin: 0; font-size: 1.15rem; font-weight: 800;">Historical Run Tracking & Drift Analysis</h3>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 12px;">
+                    Guest sessions operate in an isolated in-memory sandbox. Historical run comparison compares version snapshots, quality deltas, and schema shifts tracked across deployments in Neon PostgreSQL.
+                </p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tv-filter-chip">📊 Schema Shift Detection</span>
+                    <span class="tv-filter-chip">📈 Quality Score Deltas</span>
+                    <span class="tv-filter-chip">🔒 Multi-Tenant Isolation</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
     else:
         try:
@@ -739,10 +849,24 @@ elif active_view == "AI Root-Cause Diagnostics":
         title="AI-Powered Root-Cause Analysis",
         subtitle="Diagnose data quality degradation, missing values, outliers, and schema shifts using grounded LLM reasoning and prioritized corrective recommendations.",
         icon="🤖",
+        badge_text="LLM REASONING",
     )
 
     if st.session_state.is_guest:
-        st.caption("Demonstration Report for Sandbox Exploration:")
+        st.markdown(
+            """
+            <div class="tv-card" style="margin-bottom: 1.25rem; border-color: rgba(168, 85, 247, 0.35); background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(13, 19, 31, 0.95) 100%);">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <span class="tv-badge-purple">DEMO SANDBOX REPORT</span>
+                    <span class="tv-badge-emerald">Grounded Facts & Hypotheses</span>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;">
+                    Below is an interactive demonstration of DataPulse AI's diagnostic synthesis engine analyzing an e-commerce orders pipeline defect.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         demo_report = get_sample_ai_report(dataset_name="synthetic_customer_orders_sandbox", run_id=1)
         display_ai_analysis_report(demo_report)
     else:
@@ -839,6 +963,7 @@ elif active_view == "Data Remediation & Revalidation":
         title="Safe Data Remediation & Revalidation",
         subtitle="Safely configure deterministic data corrections, preview before-and-after diffs, and apply changes to a separate immutable copy without touching the original dataset.",
         icon="🛠️",
+        badge_text="NON-DESTRUCTIVE",
     )
 
     render_safety_guarantee_banner()
