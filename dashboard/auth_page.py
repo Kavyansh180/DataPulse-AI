@@ -42,24 +42,23 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
         <div class="tv-hero-banner">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <span class="tv-badge-crimson">★ ENTERPRISE GRADE</span>
-                    <span class="tv-badge-cyan">0–100 QUALITY SCORING</span>
-                    <span class="tv-badge-emerald">SAFE REMEDIATION</span>
+                    <span class="tv-badge-crimson">★ DATA QUALITY INTELLIGENCE</span>
+                    <span class="tv-badge-cyan">INSTANT 0–100 HEALTH SCORE</span>
+                    <span class="tv-badge-emerald">100% SAFE FIXES</span>
                 </div>
                 <div>{status_pill}</div>
             </div>
             <h1 style="font-size: 2.35rem; font-weight: 800; letter-spacing: -0.035em; margin: 0 0 10px 0; color: #ffffff;">
-                Next-Gen Data Quality Intelligence
+                Instant Data Quality & Automated Cleaning
             </h1>
-            <p style="color: #94a3b8; font-size: 1.05rem; margin: 0 0 18px 0; max-width: 820px; line-height: 1.5;">
-                Automated statistical profiling, explainable quality scoring, and safe non-destructive CSV remediation 
-                backed by Neon PostgreSQL and Amazon S3.
+            <p style="color: #f1f5f9; font-size: 1.05rem; margin: 0 0 18px 0; max-width: 820px; line-height: 1.55;">
+                Instantly scan your datasets for missing records, bad formatting, and statistical outliers — with explainable scores and safe, automated fixes.
             </p>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <span class="tv-filter-chip">⚡ 1M+ Rows Handled</span>
-                <span class="tv-filter-chip">🔍 IQR Outlier Bounds</span>
-                <span class="tv-filter-chip">🛡️ Cell-Level Diffs</span>
-                <span class="tv-filter-chip">🔒 Zero Disk Leakage</span>
+                <span class="tv-filter-chip">⚡ Fast Automated Checks</span>
+                <span class="tv-filter-chip">🔍 Catches Hidden Errors</span>
+                <span class="tv-filter-chip">🛡️ Safe Clean Copies</span>
+                <span class="tv-filter-chip">🔒 100% Private</span>
             </div>
         </div>
         """,
@@ -75,8 +74,8 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
         st.markdown(
             """
             <div style="margin-bottom: 1rem;">
-                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #ffffff;">⚡ Core Capabilities</h3>
-                <p style="color: #64748b; font-size: 0.88rem; margin: 4px 0 0 0;">Engineered for production data engineering and analytics teams</p>
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #ffffff;">⚡ What DataPulse Does For You</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem; margin: 4px 0 0 0;">Simple, powerful data validation without complex setup</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -87,12 +86,12 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
             """
             <div class="tv-card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                    <span class="tv-badge-crimson">ALGORITHMIC</span>
-                    <span style="color: #10b981; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;">100% EXPLAINABLE</span>
+                    <span class="tv-badge-crimson">HEALTH SCORE</span>
+                    <span style="color: #10b981; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;">CLEAR & EXPLAINABLE</span>
                 </div>
-                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">Deterministic Quality Scoring (0–100)</h4>
-                <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.45; margin: 0;">
-                    Calculates explainable scores across completeness, uniqueness, validity, and consistency dimensions without black-box drift guesswork.
+                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">Instant Quality Score (0–100)</h4>
+                <p style="color: #f1f5f9; font-size: 0.9rem; line-height: 1.5; margin: 0;">
+                    Know immediately how clean and reliable your dataset is across completeness, accuracy, and consistency — no guesswork.
                 </p>
             </div>
             """,
@@ -104,12 +103,12 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
             """
             <div class="tv-card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                    <span class="tv-badge-cyan">STATISTICAL</span>
+                    <span class="tv-badge-cyan">AUTO DETECTION</span>
                     <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;">AUTOMATED</span>
                 </div>
-                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">IQR Anomaly & Defect Detection</h4>
-                <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.45; margin: 0;">
-                    Automated quartile bounds flag corrupt transaction spikes, numerical skew, and duplicate rows before they degrade downstream pipelines.
+                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">Catches Errors & Bad Numbers</h4>
+                <p style="color: #f1f5f9; font-size: 0.9rem; line-height: 1.5; margin: 0;">
+                    Quickly spots corrupted transaction amounts, missing customer emails, extra spaces, and duplicate records.
                 </p>
             </div>
             """,
@@ -121,12 +120,12 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
             """
             <div class="tv-card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                    <span class="tv-badge-emerald">GOVERNANCE</span>
-                    <span style="color: #34d399; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;">IMMUTABLE</span>
+                    <span class="tv-badge-emerald">SAFE FIXES</span>
+                    <span style="color: #34d399; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;">NON-DESTRUCTIVE</span>
                 </div>
-                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">Safe Non-Destructive Remediation</h4>
-                <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.45; margin: 0;">
-                    Preview proposed transformations (imputation, deduplication, whitespace trimming) with cell-level diffs before generating versioned S3 snapshots.
+                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700;">Safe One-Click Data Cleaning</h4>
+                <p style="color: #f1f5f9; font-size: 0.9rem; line-height: 1.5; margin: 0;">
+                    Preview exact changes before saving. We create a clean new copy so your original file is never overwritten.
                 </p>
             </div>
             """,
@@ -139,25 +138,25 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
         # ---------------------------------------------------------------------
         st.markdown(
             """
-            <div class="tv-card" style="border-color: rgba(225, 29, 72, 0.35); background: linear-gradient(135deg, rgba(225, 29, 72, 0.08) 0%, rgba(13, 19, 31, 0.95) 100%);">
+            <div class="tv-card" style="border-color: rgba(225, 29, 72, 0.4); background: linear-gradient(135deg, rgba(225, 29, 72, 0.12) 0%, rgba(13, 19, 31, 0.98) 100%);">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="font-size: 1.25rem;">🚀</span>
-                    <h3 style="color: #ffffff; margin: 0; font-size: 1.15rem; font-weight: 800;">Instant Sandbox Evaluation</h3>
+                    <h3 style="color: #ffffff; margin: 0; font-size: 1.15rem; font-weight: 800;">Try Live Demo (No Sign-Up)</h3>
                 </div>
-                <p style="color: #94a3b8; font-size: 0.88rem; line-height: 1.45; margin-bottom: 12px;">
-                    Evaluate DataPulse AI immediately in an isolated, in-memory sandbox. Includes preloaded e-commerce transactions, automated profiling, and remediation previews.
+                <p style="color: #f1f5f9; font-size: 0.9rem; line-height: 1.5; margin-bottom: 12px;">
+                    Test DataPulse right in your browser with our preloaded sample dataset. See how quality scoring and data cleaning work in seconds.
                 </p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
-                    <span class="tv-badge-crimson">ZERO REGISTRATION</span>
-                    <span class="tv-badge-cyan">PRELOADED DATASET</span>
-                    <span class="tv-badge-emerald">100% IN-MEMORY</span>
+                    <span class="tv-badge-crimson">NO REGISTRATION</span>
+                    <span class="tv-badge-cyan">PRELOADED DATA</span>
+                    <span class="tv-badge-emerald">INSTANT PREVIEW</span>
                 </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        if st.button("⚡ Launch Free Guest Sandbox Session", type="primary", use_container_width=True, key="btn_hero_guest"):
+        if st.button("🚀 Try Instant Demo (No Sign-Up Needed)", type="primary", use_container_width=True, key="btn_hero_guest"):
             st.session_state.is_guest = True
             st.session_state.auth_token = None
             st.session_state.user_profile = {
@@ -166,11 +165,11 @@ def render_auth_landing_page(client: DataPulseApiClient) -> None:
                 "full_name": "Guest Explorer",
             }
             client.set_token(None)
-            st.success("Launching isolated Guest Sandbox...")
+            st.success("Launching instant demo...")
             st.rerun()
 
         st.markdown(
-            "<div style='text-align: center; color: #64748b; font-size: 0.78rem; margin: 1.25rem 0 1rem 0; font-weight: 700; letter-spacing: 0.1em;'>"
+            "<div style='text-align: center; color: #94a3b8; font-size: 0.8rem; margin: 1.25rem 0 1rem 0; font-weight: 700; letter-spacing: 0.1em;'>"
             "─── OR SIGN IN TO YOUR WORKSPACE ───"
             "</div>",
             unsafe_allow_html=True,

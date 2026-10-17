@@ -14,18 +14,19 @@ DARK_SAAS_CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* TicketVault Color Palette Tokens */
+/* TicketVault Color Palette Tokens */
 :root {
     --dp-bg-root: #06090e;
     --dp-bg-app: #080c14;
     --dp-bg-surface: #0d131f;
     --dp-bg-surface-elevated: #131c2e;
     --dp-bg-surface-hover: #19253d;
-    --dp-border: rgba(255, 255, 255, 0.08);
-    --dp-border-hover: rgba(225, 29, 72, 0.4);
-    --dp-border-active: rgba(225, 29, 72, 0.6);
+    --dp-border: rgba(255, 255, 255, 0.12);
+    --dp-border-hover: rgba(225, 29, 72, 0.5);
+    --dp-border-active: rgba(225, 29, 72, 0.7);
     --dp-text-primary: #ffffff;
-    --dp-text-secondary: #94a3b8;
-    --dp-text-muted: #64748b;
+    --dp-text-secondary: #f1f5f9;
+    --dp-text-muted: #94a3b8;
     --dp-accent-crimson: #e11d48;
     --dp-accent-crimson-hover: #f43f5e;
     --dp-accent-gradient: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
@@ -56,7 +57,7 @@ header[data-testid="stHeader"] {
 
 header[data-testid="stHeader"] button,
 header[data-testid="stHeader"] [data-testid="stToolbar"] {
-    color: var(--dp-text-secondary) !important;
+    color: var(--dp-text-primary) !important;
 }
 
 /* Main block container padding */
@@ -67,7 +68,7 @@ header[data-testid="stHeader"] [data-testid="stToolbar"] {
 }
 
 /* =============================================================================
-   1. Left Sidebar Navigation
+   1. Left Sidebar Navigation (High-Contrast, Readable Menu)
    ============================================================================= */
 section[data-testid="stSidebar"] {
     background-color: var(--dp-bg-root) !important;
@@ -96,40 +97,56 @@ section[data-testid="stSidebar"] .block-container {
     padding-right: 1.2rem !important;
 }
 
-/* Radio Navigation in Sidebar (TicketVault Pill Menu Style) */
+/* Radio Navigation in Sidebar (High-Contrast TicketVault Style) */
 section[data-testid="stSidebar"] [data-testid="stRadio"] > div {
-    gap: 6px !important;
+    gap: 8px !important;
 }
 
 section[data-testid="stSidebar"] [data-testid="stRadio"] label {
-    background-color: transparent !important;
-    padding: 10px 14px !important;
-    border-radius: 10px !important;
-    border: 1px solid transparent !important;
-    color: var(--dp-text-secondary) !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
+    background: #0f1626 !important;
+    padding: 12px 16px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    font-size: 14.5px !important;
+    font-weight: 600 !important;
     cursor: pointer !important;
-    transition: all 0.15s ease-in-out !important;
+    transition: all 0.18s ease-in-out !important;
     display: flex !important;
     align-items: center !important;
-    margin-bottom: 3px !important;
+    margin-bottom: 4px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stRadio"] label p,
+section[data-testid="stSidebar"] [data-testid="stRadio"] label span,
+section[data-testid="stSidebar"] [data-testid="stRadio"] label div {
+    color: #f8fafc !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
 }
 
 section[data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
-    background-color: rgba(255, 255, 255, 0.04) !important;
-    color: var(--dp-text-primary) !important;
-    transform: translateX(2px);
+    background: #17243c !important;
+    border-color: rgba(225, 29, 72, 0.5) !important;
+    color: #ffffff !important;
+    transform: translateX(3px);
 }
 
 section[data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"],
 section[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) {
-    background: linear-gradient(90deg, rgba(225, 29, 72, 0.18) 0%, rgba(225, 29, 72, 0.04) 100%) !important;
+    background: linear-gradient(135deg, rgba(225, 29, 72, 0.25) 0%, rgba(13, 19, 31, 0.98) 100%) !important;
     color: #ffffff !important;
-    border-left: 3px solid var(--dp-accent-crimson) !important;
-    border-color: rgba(225, 29, 72, 0.35) !important;
-    font-weight: 600 !important;
-    box-shadow: 0 2px 10px rgba(225, 29, 72, 0.15) !important;
+    border: 1.5px solid var(--dp-accent-crimson) !important;
+    box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3) !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"] p,
+section[data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"] span,
+section[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) p,
+section[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) span {
+    color: #ffffff !important;
+    font-weight: 700 !important;
 }
 
 section[data-testid="stSidebar"] [data-testid="stRadio"] input[type="radio"] {
@@ -140,10 +157,10 @@ section[data-testid="stSidebar"] [data-testid="stRadio"] div[data-testid="stMark
 }
 
 /* =============================================================================
-   2. Typography & Headings
+   2. Typography & High-Contrast Readability
    ============================================================================= */
 h1, h2, h3, h4, h5, h6 {
-    color: var(--dp-text-primary) !important;
+    color: #ffffff !important;
     font-weight: 700 !important;
     letter-spacing: -0.025em !important;
 }
@@ -152,8 +169,20 @@ h1 { font-size: 1.95rem !important; }
 h2 { font-size: 1.5rem !important; }
 h3 { font-size: 1.2rem !important; }
 
-p, span, label {
-    color: var(--dp-text-secondary);
+p, div[data-testid="stMarkdownContainer"] p {
+    color: #f1f5f9 !important;
+    line-height: 1.55 !important;
+}
+
+label, [data-testid="stWidgetLabel"] label, [data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] span {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+}
+
+[data-testid="stCaptionContainer"] p, caption, small {
+    color: #94a3b8 !important;
+    font-size: 0.85rem !important;
 }
 
 /* =============================================================================
@@ -171,28 +200,28 @@ p, span, label {
 }
 
 [data-testid="stMetric"]:hover {
-    border-color: rgba(225, 29, 72, 0.35) !important;
+    border-color: rgba(225, 29, 72, 0.4) !important;
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(225, 29, 72, 0.12) !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(225, 29, 72, 0.15) !important;
 }
 
 [data-testid="stMetricLabel"] {
-    color: var(--dp-text-secondary) !important;
-    font-size: 0.78rem !important;
-    font-weight: 600 !important;
+    color: #94a3b8 !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.06em !important;
 }
 
 [data-testid="stMetricValue"] {
-    color: var(--dp-text-primary) !important;
-    font-size: 1.85rem !important;
+    color: #ffffff !important;
+    font-size: 1.95rem !important;
     font-weight: 800 !important;
     letter-spacing: -0.03em !important;
 }
 
 [data-testid="stMetricDelta"] {
-    font-size: 0.85rem !important;
+    font-size: 0.88rem !important;
     font-weight: 600 !important;
 }
 
@@ -204,12 +233,12 @@ p, span, label {
 div[data-baseweb="input"],
 div[data-baseweb="base-input"],
 div[data-baseweb="textarea"] {
-    background-color: #0a0f19 !important;
-    background: #0a0f19 !important;
-    border: 1px solid var(--dp-border) !important;
-    color: var(--dp-text-primary) !important;
+    background-color: #0b111e !important;
+    background: #0b111e !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
     border-radius: 10px !important;
-    -webkit-text-fill-color: var(--dp-text-primary) !important;
+    -webkit-text-fill-color: #ffffff !important;
     transition: all 0.2s ease;
 }
 
@@ -218,21 +247,23 @@ div[data-baseweb="textarea"] {
 div[data-baseweb="input"]:focus-within,
 div[data-baseweb="textarea"]:focus-within {
     border-color: var(--dp-accent-crimson) !important;
-    box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.25) !important;
+    box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.3) !important;
 }
 
 div[data-baseweb="select"] > div {
-    background-color: #0a0f19 !important;
-    background: #0a0f19 !important;
-    border: 1px solid var(--dp-border) !important;
-    color: var(--dp-text-primary) !important;
+    background-color: #0b111e !important;
+    background: #0b111e !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
     border-radius: 10px !important;
 }
 
 div[data-baseweb="select"] span,
+div[data-baseweb="select"] div,
 div[data-baseweb="select"] svg {
-    color: var(--dp-text-primary) !important;
-    fill: var(--dp-text-primary) !important;
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    font-weight: 500 !important;
 }
 
 div[data-baseweb="popover"],
@@ -240,21 +271,32 @@ div[data-baseweb="menu"],
 ul[role="listbox"] {
     background-color: var(--dp-bg-surface-elevated) !important;
     background: var(--dp-bg-surface-elevated) !important;
-    border: 1px solid var(--dp-border) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 10px !important;
-    color: var(--dp-text-primary) !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
 }
 
 li[role="option"] {
     background-color: var(--dp-bg-surface-elevated) !important;
-    color: var(--dp-text-primary) !important;
+    color: #f1f5f9 !important;
+    font-size: 0.92rem !important;
+    font-weight: 500 !important;
+    padding: 10px 14px !important;
 }
 
 li[role="option"]:hover,
 li[aria-selected="true"] {
     background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
     color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+[data-testid="stCheckbox"] label p,
+[data-testid="stCheckbox"] label span {
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
 }
 
 /* =============================================================================
@@ -529,7 +571,7 @@ def render_brand_sidebar(app_name: str = "DataPulse AI", subtitle: str = "DATA Q
             <div style="background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 10px rgba(225, 29, 72, 0.4);">⚡</div>
             <h2 style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #ffffff;">{app_name}</h2>
         </div>
-        <p style="color: #64748b; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px;">{subtitle}</p>
+        <p style="color: #94a3b8; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px;">{subtitle}</p>
         """,
         unsafe_allow_html=True,
     )
@@ -557,7 +599,7 @@ def render_header(
                 <h1 style="margin: 0; font-size: 1.85rem; font-weight: 800; letter-spacing: -0.025em; color: #ffffff;">{icon} {title}</h1>
                 {badge_html}
             </div>
-            <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 4px; margin-bottom: 0;">{subtitle}</p>
+            <p style="color: #f1f5f9; font-size: 0.95rem; margin-top: 5px; margin-bottom: 0; line-height: 1.5;">{subtitle}</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -566,15 +608,15 @@ def render_header(
 
 
 def render_safety_guarantee_banner() -> None:
-    """Render visual safety guarantee banner in the Data Remediation view."""
+    """Render clear, reassuring safety guarantee banner in the Data Remediation view."""
     st.markdown(
         """
-        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 12px;">
-            <div style="font-size: 1.3rem; line-height: 1;">🛡️</div>
+        <div style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 12px;">
+            <div style="font-size: 1.4rem; line-height: 1;">🛡️</div>
             <div>
-                <h4 style="color: #34d399; margin: 0 0 3px 0; font-size: 0.95rem; font-weight: 700;">Source Dataset Immutability Guarantee</h4>
-                <p style="color: #94a3b8; font-size: 0.85rem; margin: 0; line-height: 1.45;">
-                    Proposed transformations are previewed strictly in-memory on a non-destructive copy. Approved corrections generate an independent, versioned CSV in private S3 storage. Your original raw dataset is never altered or overwritten.
+                <h4 style="color: #34d399; margin: 0 0 4px 0; font-size: 1rem; font-weight: 700;">100% Safe: Your Original File is Never Touched</h4>
+                <p style="color: #f1f5f9; font-size: 0.9rem; margin: 0; line-height: 1.5;">
+                    DataPulse creates a separate clean copy of your data. You can preview every single changed row before confirming, and your original uploaded file will always remain untouched.
                 </p>
             </div>
         </div>

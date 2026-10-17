@@ -255,9 +255,9 @@ def display_ai_analysis_report(analysis: Dict[str, Any]) -> None:
         f"""
         <div class="tv-card" style="border-left: 4px solid var(--dp-accent-crimson); margin-bottom: 1.25rem;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <span class="tv-badge-crimson">EXECUTIVE ASSESSMENT</span>
+                <span class="tv-badge-crimson">AI EXECUTIVE SUMMARY</span>
             </div>
-            <p style="color: #f8fafc; font-size: 0.95rem; line-height: 1.5; margin: 0;">
+            <p style="color: #ffffff; font-size: 0.98rem; line-height: 1.55; margin: 0;">
                 {assessment}
             </p>
         </div>
@@ -268,36 +268,37 @@ def display_ai_analysis_report(analysis: Dict[str, Any]) -> None:
     col1, col2 = st.columns(2, gap="medium")
 
     with col1:
-        st.markdown("### 🔍 Key Findings (Empirical)")
+        st.markdown("### 🔍 What the Data Shows")
         if findings:
             for f in findings:
                 st.markdown(
                     f"""
-                    <div style="background: #0d1422; border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; color: #cbd5e1; font-size: 0.88rem;">
+                    <div style="background: #0d1422; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 11px 15px; margin-bottom: 8px; color: #ffffff; font-size: 0.92rem; line-height: 1.45;">
                         • {f}
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
         else:
-            st.caption("No specific empirical findings highlighted.")
+            st.caption("No specific findings highlighted.")
 
-        st.markdown("### 💡 Root Cause Hypotheses")
+        st.markdown("### 💡 Why This Happened")
         if causes:
             for idx, c in enumerate(causes, 1):
                 cause_text = c.get("cause", "")
                 is_hyp = c.get("is_hypothesis", True)
                 evidence = c.get("supporting_evidence", "")
-                badge_html = '<span class="tv-badge-purple">HYPOTHESIS</span>' if is_hyp else '<span class="tv-badge-emerald">OBSERVED FACT</span>'
+                badge_html = '<span class="tv-badge-purple">LIKELY CAUSE</span>' if is_hyp else '<span class="tv-badge-emerald">CONFIRMED FACT</span>'
 
                 with st.expander(f"#{idx} {cause_text[:50]}...", expanded=True):
-                    st.markdown(f"{badge_html} **{cause_text}**", unsafe_allow_html=True)
-                    st.caption(f"Supporting Evidence: {evidence}")
+                    st.markdown(f"{badge_html} <span style='color: #ffffff; font-weight: 600; margin-left: 6px;'>{cause_text}</span>", unsafe_allow_html=True)
+                    if evidence:
+                        st.markdown(f"<p style='color: #cbd5e1; font-size: 0.85rem; margin-top: 6px;'><strong>Evidence:</strong> {evidence}</p>", unsafe_allow_html=True)
         else:
             st.caption("No root causes identified.")
 
     with col2:
-        st.markdown("### 🛠️ Prioritized Recommendations")
+        st.markdown("### 🛠️ Suggested Actions")
         if recommendations:
             for r in recommendations:
                 action = r.get("action", "")
@@ -308,12 +309,12 @@ def display_ai_analysis_report(analysis: Dict[str, Any]) -> None:
 
                 st.markdown(
                     f"""
-                    <div class="tv-card" style="padding: 1rem; margin-bottom: 10px;">
+                    <div class="tv-card" style="padding: 1.1rem; margin-bottom: 10px;">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                             <span class="{badge_cls}">{priority} PRIORITY</span>
                         </div>
-                        <p style="color: #f8fafc; font-size: 0.9rem; font-weight: 600; margin: 0 0 4px 0;">{action}</p>
-                        <p style="color: #64748b; font-size: 0.8rem; margin: 0;">Evidence: {evidence}</p>
+                        <p style="color: #ffffff; font-size: 0.95rem; font-weight: 600; margin: 0 0 6px 0;">{action}</p>
+                        <p style="color: #cbd5e1; font-size: 0.85rem; margin: 0;"><strong>Reason:</strong> {evidence}</p>
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -322,7 +323,7 @@ def display_ai_analysis_report(analysis: Dict[str, Any]) -> None:
             st.caption("No recommendations provided.")
 
         if limitations:
-            st.markdown("### ⚠️ Limitations & Notes")
+            st.markdown("### ℹ️ Additional Notes")
             for lim in limitations:
                 st.caption(f"• *{lim}*")
 
