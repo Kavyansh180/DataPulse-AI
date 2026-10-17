@@ -18,7 +18,7 @@ if "app" in sys.modules and not hasattr(sys.modules["app"], "__path__"):
     del sys.modules["app"]
 
 from app.services.profiler_service import ProfilerService, DatasetProfileResult
-from app.services.remediation_service import RemediationService
+from app.services.remediation_engine import RemediationEngine
 from app.schemas.remediation import RemediationOperation
 from dashboard.sample_demo import get_sample_csv_bytes
 SAMPLE_CSV_PATH = _PROJECT_ROOT / "sample_data" / "synthetic_customer_orders.csv"
@@ -98,7 +98,7 @@ def simulate_guest_remediation(
 ) -> Dict[str, Any]:
     """Simulate remediation operations in-memory without persistence."""
     pydantic_ops = [RemediationOperation(**op) for op in operations_dict_list]
-    working_df, op_previews, sample_diffs, warnings = RemediationService.simulate_operations(df, pydantic_ops)
+    working_df, op_previews, sample_diffs, warnings = RemediationEngine.simulate_operations(df, pydantic_ops)
 
     formatted_ops = []
     for prev in op_previews:
@@ -135,7 +135,7 @@ def apply_guest_remediation(
 ) -> Dict[str, Any]:
     """Apply remediation in-memory and revalidate quality score."""
     pydantic_ops = [RemediationOperation(**op) for op in operations_dict_list]
-    working_df, _, _, _ = RemediationService.simulate_operations(original_df, pydantic_ops)
+    working_df, _, _, _ = RemediationEngine.simulate_operations(original_df, pydantic_ops)
 
     original_report = ProfilerService.profile_dataframe(original_df)
     new_report = ProfilerService.profile_dataframe(working_df)

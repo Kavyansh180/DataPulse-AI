@@ -9,21 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 logger = logging.getLogger("datapulse.errors")
 
 
-class APIError(Exception):
-    """Custom application exception with structured error code and message."""
-
-    def __init__(
-        self,
-        status_code: int,
-        message: str,
-        code: str = "BAD_REQUEST",
-        details: Optional[Any] = None,
-    ):
-        super().__init__(message)
-        self.status_code = status_code
-        self.message = message
-        self.code = code
-        self.details = details
+from app.core.exceptions import APIError
 
 
 def register_error_handlers(app: FastAPI) -> None:

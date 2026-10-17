@@ -39,13 +39,80 @@ def create_db_engine():
     )
 
 
-engine = create_db_engine()
+_engine = None
 
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-)
+
+def get_engine():
+    """Retrieve or lazily initialize the SQLAlchemy engine."""
+    global _engine
+    if _engine is None:
+        _engine = create_db_engine()
+    return _engine
+
+
+class _LazyEngineProxy:
+    """Proxy object that delays engine initialization until accessed."""
+
+    def _get_engine(self):
+        global _engine
+        if _engine is None:
+            _engine = create_db_engine()
+        return _engine
+
+    def __getattr__(self, name):
+        return getattr(self._get_engine(), name)
+
+    def connect(self, *args, **kwargs):
+        return self._get_engine().connect(*args, **kwargs)
+
+    def begin(self, *args, **kwargs):
+        return self._get_engine().begin(*args, **kwargs)
+
+    @property
+    def url(self):
+        return self._get_engine().url
+
+    def __repr__(self):
+        global _engine
+        if _engine is not None:
+            return repr(_engine)
+        return "<LazyEngine(uninitialized)>"
+
+
+engine = _LazyEngineProxy()
+
+
+class _LazySessionLocal:
+    """Proxy callable that provides Session instances bound to the active engine."""
+
+    def __call__(self, *args, **kwargs):
+        import sys
+        mod = sys.modules.get(__name__)
+        active_engine = getattr(mod, "engine", engine)
+        if isinstance(active_engine, _LazyEngineProxy):
+            active_engine = active_engine._get_engine()
+        factory = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=active_engine,
+        )
+        return factory(*args, **kwargs)
+
+    def __getattr__(self, name):
+        import sys
+        mod = sys.modules.get(__name__)
+        active_engine = getattr(mod, "engine", engine)
+        if isinstance(active_engine, _LazyEngineProxy):
+            active_engine = active_engine._get_engine()
+        factory = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=active_engine,
+        )
+        return getattr(factory, name)
+
+
+SessionLocal = _LazySessionLocal()
 
 
 def get_db() -> Generator[Session, None, None]:
