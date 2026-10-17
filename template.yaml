@@ -1,0 +1,187 @@
+# ==============================================================================
+# ARCHITECTURAL NOTE:
+# The active deployment workflow uses direct Docker + AWS CLI targeting Amazon ECR,
+# AWS Lambda, and Amazon API Gateway HTTP API v2 in ap-south-1 (Mumbai).
+# Refer to docs/DEPLOYMENT_AWS.md for the authoritative direct CLI deployment guide.
+# This template is retained as an optional IaC reference.
+# ==============================================================================
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  DataPulse AI — Serverless Container Backend
+  FastAPI application running on AWS Lambda with Amazon API Gateway HTTP API and Amazon S3.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues:
+      - development
+      - staging
+      - production
+    Description: Runtime environment profile.
+
+  DatabaseUrl:
+    Type: String
+    NoEcho: true
+    Description: >
+      Neon PostgreSQL pooled connection string with SSL mode.
+      Format: postgresql://user:password@ep-sample-pooler.region.aws.neon.tech/neondb?sslmode=require
+
+  AllowedOrigins:
+    Type: String
+    Default: "*"
+    Description: >
+      Comma-separated allowed origins for CORS (e.g. https://your-streamlit-app.streamlit.app).
+      Defaults to '*' for open development.
+
+  LlmApiKey:
+    Type: String
+    Default: ""
+    NoEcho: true
+    Description: Optional API key for LLM root-cause diagnostics (e.g., OpenAI or Groq).
+
+  LlmProvider:
+    Type: String
+    Default: "openai"
+    Description: LLM provider name (e.g., openai, groq, generic).
+
+  LlmModel:
+    Type: String
+    Default: "gpt-4o-mini"
+    Description: LLM model identifier.
+
+  LlmApiBase:
+    Type: String
+    Default: ""
+    Description: Optional custom base URL for OpenAI-compatible providers.
+
+  MaxUploadSizeBytes:
+    Type: Number
+    Default: 10485760
+    Description: Maximum CSV file upload size in bytes (10MB default to match API Gateway payload limits).
+
+  MaxRowCountLimit:
+    Type: Number
+    Default: 1000000
+    Description: Maximum rows allowed for data profiling.
+
+Resources:
+  # ----------------------------------------------------------------------------
+  # Private Amazon S3 Storage Bucket
+  # ----------------------------------------------------------------------------
+  DataPulseStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUpload
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+
+  # ----------------------------------------------------------------------------
+  # Amazon API Gateway (HTTP API v2)
+  # ----------------------------------------------------------------------------
+  HttpApiGateway:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Description: "HTTP API Gateway for DataPulse AI backend"
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref AllowedOrigins
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - "*"
+        MaxAge: 300
+
+  # ----------------------------------------------------------------------------
+  # AWS Lambda Container Function
+  # ----------------------------------------------------------------------------
+  DataPulseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: "DataPulse AI FastAPI application backend"
+      PackageType: Image
+      Architectures:
+        - x86_64
+      MemorySize: 1024
+      Timeout: 30
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          DEBUG: "False"
+          APP_NAME: "DataPulse AI"
+          API_V1_PREFIX: "/api/v1"
+          ALLOWED_ORIGINS: !Ref AllowedOrigins
+          DATABASE_URL: !Ref DatabaseUrl
+          DB_POOL_SIZE: "1"
+          DB_MAX_OVERFLOW: "0"
+          DB_POOL_TIMEOUT: "15"
+          DB_POOL_RECYCLE: "600"
+          S3_BUCKET_NAME: !Ref DataPulseStorageBucket
+          LLM_PROVIDER: !Ref LlmProvider
+          LLM_MODEL: !Ref LlmModel
+          LLM_API_KEY: !Ref LlmApiKey
+          LLM_API_BASE: !Ref LlmApiBase
+          MAX_UPLOAD_SIZE_BYTES: !Ref MaxUploadSizeBytes
+          MAX_ROW_COUNT_LIMIT: !Ref MaxRowCountLimit
+      Policies:
+        # Least-privilege IAM policy scoped strictly to the DataPulse storage bucket
+        - S3CrudPolicy:
+            BucketName: !Ref DataPulseStorageBucket
+      Events:
+        RootPathEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /
+            Method: ANY
+            PayloadFormatVersion: "2.0"
+        ProxyPathEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGateway
+            Path: /{proxy+}
+            Method: ANY
+            PayloadFormatVersion: "2.0"
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: latest
+
+  # ----------------------------------------------------------------------------
+  # Amazon CloudWatch Log Group (With 7-Day Retention Cost Control)
+  # ----------------------------------------------------------------------------
+  DataPulseLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${DataPulseFunction}"
+      RetentionInDays: 7
+
+Outputs:
+  ApiEndpoint:
+    Description: "HTTP API Gateway endpoint URL for DataPulse AI"
+    Value: !Sub "https://${HttpApiGateway}.execute-api.${AWS::Region}.amazonaws.com"
+
+  S3BucketName:
+    Description: "Amazon S3 private storage bucket name"
+    Value: !Ref DataPulseStorageBucket
+
+  LambdaFunctionArn:
+    Description: "AWS Lambda function ARN"
+    Value: !GetAtt DataPulseFunction.Arn

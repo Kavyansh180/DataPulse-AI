@@ -1,0 +1,32 @@
+customer_id,name,email,signup_date,order_amount,status
+1001,Alice Johnson,alice.johnson@example.com,2024-01-15,124.50,active
+1002,Bob Smith,bob.smith@example.com,2024-01-16,89.00,active
+1003,Charlie Brown,,2024-01-18,45.20,pending
+1004,Diana Prince,diana.prince@example.com,2024-01-20,210.00,active
+1005,Edward Elric,edward.elric@example.com,2024-01-22,35.00,canceled
+1006,Fiona Gallagher,fiona.g@example.com,2024-01-23,150.75,active
+1007,George Clark,,2024-01-25,95.00,active
+1008,Hannah Abbott,hannah.a@example.com,2024-01-26,320.00,active
+1009,Ian Malcolm,ian.malcolm@example.com,2024-01-27,78.50,pending
+1010,Julia Roberts,julia.r@example.com,2024-01-28,99999.00,active
+1011,Kevin Bacon,kevin.bacon@example.com,2024-01-29,112.00,active
+1012,Laura Croft,laura.croft@example.com,2024-01-30,450.00,active
+1013,Michael Scott,michael.scott@example.com,2024-02-01,65.00,active
+1014,Nancy Wheeler,,2024-02-02,18.50,pending
+1015,Oliver Queen,oliver.queen@example.com,2024-02-03,500.00,active
+1016,Peter Parker,peter.parker@example.com,2024-02-04,42.00,active
+1017,Quinn Fabray,quinn.f@example.com,2024-02-05,230.00,canceled
+1018,Rachel Green,rachel.green@example.com,2024-02-06,175.25,active
+1019,Steve Rogers,steve.rogers@example.com,2024-02-07,88.00,active
+1020,Tony Stark,tony.stark@example.com,2024-02-08,850000.00,active
+1021,Ursula Buffay,,2024-02-09,62.00,pending
+1022,Victor Stone,victor.stone@example.com,2024-02-10,310.00,active
+1023,Wanda Maximoff,wanda.m@example.com,2024-02-11,195.00,active
+1024,Xavier Charles,charles.xavier@example.com,2024-02-12,410.50,active
+1025,Yvonne Strahovski,yvonne.s@example.com,2024-02-13,125.00,active
+1026,Zachary Levi,zachary.l@example.com,2024-02-14,75.00,active
+1001,Alice Johnson,alice.johnson@example.com,2024-01-15,124.50,active
+1027,  Arthur Dent  ,arthur.dent@example.com,2024-02-15,55.00, active 
+1028,Ford Prefect,ford.prefect@example.com,2024-02-16,80.00,active
+1029,Trillian Astra,trillian.astra@example.com,2024-02-17,215.00,pending
+1030,Zaphod Beeblebrox,zaphod@example.com,2024-02-18,1250000.00,active
