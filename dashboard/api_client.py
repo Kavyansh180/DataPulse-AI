@@ -26,6 +26,51 @@ class DashboardApiError(Exception):
         self.response_body = response_body
 
 
+def resolve_backend_url(base_url: Optional[str] = None) -> str:
+    """Resolve backend API base URL with strict priority:
+    1. Explicitly provided argument (if non-empty)
+    2. OS Environment variable DATAPULSE_API_URL
+    3. OS Environment variable BACKEND_URL
+    4. Streamlit Secrets (st.secrets["DATAPULSE_API_URL"] or st.secrets["BACKEND_URL"])
+    5. Fallback http://127.0.0.1:8000 for local development
+    """
+    if base_url and str(base_url).strip():
+        return str(base_url).strip().rstrip("/")
+
+    # 1. Environment variables
+    env_url = os.environ.get("DATAPULSE_API_URL") or os.environ.get("BACKEND_URL")
+    if env_url and env_url.strip():
+        return env_url.strip().rstrip("/")
+
+    # 2. Streamlit Cloud Secrets (st.secrets)
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets"):
+            try:
+                for key in ("DATAPULSE_API_URL", "BACKEND_URL"):
+                    if key in st.secrets and st.secrets[key]:
+                        val = str(st.secrets[key]).strip()
+                        if val:
+                            return val.rstrip("/")
+            except Exception:
+                pass
+
+            try:
+                if "general" in st.secrets:
+                    general = st.secrets["general"]
+                    for key in ("DATAPULSE_API_URL", "BACKEND_URL"):
+                        if hasattr(general, "get") and general.get(key):
+                            val = str(general.get(key)).strip()
+                            if val:
+                                return val.rstrip("/")
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    return "http://127.0.0.1:8000"
+
+
 class DataPulseApiClient:
     """HTTP client wrapper communicating with the DataPulse AI FastAPI backend."""
 
@@ -35,13 +80,7 @@ class DataPulseApiClient:
         timeout: float = 30.0,
         token: Optional[str] = None,
     ):
-        configured_url = (
-            base_url
-            or os.environ.get("DATAPULSE_API_URL")
-            or os.environ.get("BACKEND_URL")
-            or "http://127.0.0.1:8000"
-        )
-        self.base_url = configured_url.rstrip("/")
+        self.base_url = resolve_backend_url(base_url)
         self.timeout = timeout
         self.token = token
 
@@ -211,11 +250,13 @@ class DataPulseApiClient:
     # -------------------------------------------------------------------------
 
     def check_health(self) -> Dict[str, Any]:
-        """Call GET /health to verify backend process vitality."""
+        """Call GET /health (with /api/v1/health fallback) to verify backend process vitality."""
         url = self._url("/health")
         try:
             with httpx.Client(timeout=5.0) as client:
                 res = client.get(url)
+                if res.status_code == 404:
+                    res = client.get(self._url("/api/v1/health"))
                 return self._handle_response(res)
         except httpx.ConnectError:
             raise DashboardApiError(
@@ -228,6 +269,12 @@ class DataPulseApiClient:
                 "Health check request timed out.",
                 status_code=504,
                 error_code="TIMEOUT",
+            )
+        except httpx.RequestError as exc:
+            raise DashboardApiError(
+                f"Health check request failed: {type(exc).__name__}",
+                status_code=503,
+                error_code="NETWORK_ERROR",
             )
 
     def check_readiness(self) -> Dict[str, Any]:

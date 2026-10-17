@@ -447,3 +447,47 @@ def test_api_client_analyze_run_llm_not_configured():
         assert "LLM API key is not configured" in exc_info.value.message
 
 
+def test_resolve_backend_url_with_st_secrets(monkeypatch):
+    """Verify resolve_backend_url correctly reads from st.secrets."""
+    from dashboard.api_client import resolve_backend_url
+    import streamlit as st
+
+    monkeypatch.delenv("DATAPULSE_API_URL", raising=False)
+    monkeypatch.delenv("BACKEND_URL", raising=False)
+
+    # 1. Top-level secret
+    with patch.object(st, "secrets", {"DATAPULSE_API_URL": "https://secrets.api.datapulse.ai/"}):
+        assert resolve_backend_url() == "https://secrets.api.datapulse.ai"
+
+    # 2. General section secret
+    with patch.object(st, "secrets", {"general": {"DATAPULSE_API_URL": "https://general-secrets.api.datapulse.ai/"}}):
+        assert resolve_backend_url() == "https://general-secrets.api.datapulse.ai"
+
+    # 3. Explicit argument overrides secrets
+    with patch.object(st, "secrets", {"DATAPULSE_API_URL": "https://secrets.api.datapulse.ai/"}):
+        assert resolve_backend_url("https://explicit.api.datapulse.ai/") == "https://explicit.api.datapulse.ai"
+
+
+def test_api_client_check_health_primary_and_fallback():
+    """Verify check_health falls back to /api/v1/health when /health returns 404."""
+    client = DataPulseApiClient(base_url="https://api.datapulse.ai")
+
+    # Primary returns 404, fallback returns 200
+    resp_404 = MagicMock()
+    resp_404.status_code = 404
+    resp_404.is_success = False
+
+    resp_200 = MagicMock()
+    resp_200.status_code = 200
+    resp_200.is_success = True
+    resp_200.json.return_value = {"status": "healthy", "app": "DataPulse AI", "version": "0.1.0"}
+
+    with patch("httpx.Client.get", side_effect=[resp_404, resp_200]) as mock_get:
+        res = client.check_health()
+        assert res["status"] == "healthy"
+        assert mock_get.call_count == 2
+        assert mock_get.call_args_list[0].args[0] == "https://api.datapulse.ai/health"
+        assert mock_get.call_args_list[1].args[0] == "https://api.datapulse.ai/api/v1/health"
+
+
+

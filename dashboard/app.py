@@ -30,7 +30,11 @@ except ImportError:
     pass
 
 try:
-    from dashboard.api_client import DataPulseApiClient, DashboardApiError
+    from dashboard.api_client import (
+        DataPulseApiClient,
+        DashboardApiError,
+        resolve_backend_url,
+    )
     from dashboard.auth_page import render_auth_landing_page
     from dashboard.guest_sandbox import (
         load_default_guest_dataset,
@@ -53,7 +57,11 @@ try:
     )
     from dashboard.sample_demo import get_sample_ai_report
 except ImportError:
-    from api_client import DataPulseApiClient, DashboardApiError  # type: ignore
+    from api_client import (  # type: ignore
+        DataPulseApiClient,
+        DashboardApiError,
+        resolve_backend_url,
+    )
     from auth_page import render_auth_landing_page  # type: ignore
     from guest_sandbox import (  # type: ignore
         load_default_guest_dataset,
@@ -95,11 +103,7 @@ apply_custom_theme()
 # 2. Session State Initialization
 # -----------------------------------------------------------------------------
 if "backend_url" not in st.session_state:
-    st.session_state.backend_url = (
-        os.environ.get("DATAPULSE_API_URL")
-        or os.environ.get("BACKEND_URL")
-        or "http://127.0.0.1:8000"
-    )
+    st.session_state.backend_url = resolve_backend_url()
 
 if "auth_token" not in st.session_state:
     st.session_state.auth_token = None
@@ -188,7 +192,7 @@ with st.sidebar:
         app_name = health.get("app", "DataPulse AI")
         app_ver = health.get("version", "0.1.0")
         st.success(f"● {app_name} v{app_ver} Online")
-    except DashboardApiError:
+    except (DashboardApiError, Exception):
         st.error("● Backend Offline")
 
     st.divider()
@@ -217,6 +221,11 @@ with st.sidebar:
         )
         if new_url != st.session_state.backend_url:
             st.session_state.backend_url = new_url
+            st.rerun()
+
+        st.caption("AWS Production Endpoint: https://e3bllh77q4.execute-api.ap-south-1.amazonaws.com")
+        if st.button("🔗 Connect to Production AWS API", key="btn_connect_prod_aws", use_container_width=True):
+            st.session_state.backend_url = "https://e3bllh77q4.execute-api.ap-south-1.amazonaws.com"
             st.rerun()
 
     st.caption("DataPulse AI Enterprise • v0.1.0\n\nNeon PostgreSQL & S3 Storage")
