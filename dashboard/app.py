@@ -49,10 +49,16 @@ try:
         render_column_quality_bar,
         display_ai_analysis_report,
     )
+    import importlib
+    import dashboard.theme as _theme_mod
+    try:
+        importlib.reload(_theme_mod)
+    except Exception:
+        pass
     from dashboard.theme import (
         apply_custom_theme,
         render_brand_sidebar,
-        render_header,
+        render_header as _theme_render_header,
         render_safety_guarantee_banner,
     )
     from dashboard.sample_demo import get_sample_ai_report
@@ -76,13 +82,58 @@ except ImportError:
         render_column_quality_bar,
         display_ai_analysis_report,
     )
+    import theme as _theme_mod  # type: ignore
+    try:
+        importlib.reload(_theme_mod)
+    except Exception:
+        pass
     from theme import (  # type: ignore
         apply_custom_theme,
         render_brand_sidebar,
-        render_header,
+        render_header as _theme_render_header,
         render_safety_guarantee_banner,
     )
     from sample_demo import get_sample_ai_report  # type: ignore
+
+
+def render_header(
+    title: str,
+    subtitle: str,
+    icon: str = "",
+    badge_text: Optional[str] = None,
+    backend_status: Optional[str] = None,
+    backend_online: bool = True,
+    **kwargs: Any,
+) -> None:
+    """Render consistent page header with defensive fallback against stale module caches."""
+    try:
+        _theme_render_header(
+            title=title,
+            subtitle=subtitle,
+            icon=icon,
+            badge_text=badge_text,
+            backend_status=backend_status,
+            backend_online=backend_online,
+            **kwargs,
+        )
+    except TypeError:
+        # Fallback if an older cached render_header function without badge_text is invoked
+        try:
+            _theme_render_header(
+                title=title,
+                subtitle=subtitle,
+                icon=icon,
+                backend_status=backend_status,
+                backend_online=backend_online,
+            )
+        except TypeError:
+            _theme_render_header(title=title, subtitle=subtitle, icon=icon)
+
+        if badge_text:
+            st.markdown(
+                f'<div style="margin-top: -10px; margin-bottom: 12px;"><span class="tv-badge-crimson">{badge_text}</span></div>',
+                unsafe_allow_html=True,
+            )
 
 
 # -----------------------------------------------------------------------------

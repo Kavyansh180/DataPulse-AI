@@ -490,4 +490,72 @@ def test_api_client_check_health_primary_and_fallback():
         assert mock_get.call_args_list[1].args[0] == "https://api.datapulse.ai/api/v1/health"
 
 
+# -----------------------------------------------------------------------------
+# 5. Header Rendering Regression Tests (TicketVault Badge & Backward Compatibility)
+# -----------------------------------------------------------------------------
+
+def test_theme_render_header_with_badge_text():
+    """Verify render_header in dashboard.theme accepts badge_text without TypeError."""
+    import streamlit as st
+    from dashboard.theme import render_header
+
+    with patch.object(st, "markdown") as mock_markdown, patch.object(st, "divider") as mock_divider:
+        render_header(
+            title="Overview & Dataset Ingestion",
+            subtitle="Upload datasets for automated statistical profiling",
+            icon="📊",
+            badge_text="LIVE MONITORING",
+        )
+        assert mock_markdown.called
+        assert mock_divider.called
+        rendered_html = mock_markdown.call_args[0][0]
+        assert "LIVE MONITORING" in rendered_html
+        assert "tv-badge-crimson" in rendered_html
+        assert "Overview & Dataset Ingestion" in rendered_html
+
+
+def test_theme_render_header_legacy_args_and_kwargs():
+    """Verify render_header handles legacy backend arguments and arbitrary kwargs."""
+    import streamlit as st
+    from dashboard.theme import render_header
+
+    with patch.object(st, "markdown") as mock_markdown, patch.object(st, "divider") as mock_divider:
+        render_header(
+            title="Quality Deep-Dive",
+            subtitle="Inspect metrics",
+            icon="🔍",
+            backend_status="Backend Online",
+            backend_online=True,
+            arbitrary_future_arg="supported",
+        )
+        assert mock_markdown.called
+        assert mock_divider.called
+
+
+def test_app_render_header_stale_cache_fallback():
+    """Verify app.render_header gracefully handles TypeError from a stale cached function."""
+    import streamlit as st
+    from dashboard.app import render_header
+
+    def stale_side_effect(*args, **kwargs):
+        if "badge_text" in kwargs:
+            raise TypeError("render_header() got an unexpected keyword argument 'badge_text'")
+        return None
+
+    stale_mock = MagicMock(side_effect=stale_side_effect)
+
+    with patch("dashboard.app._theme_render_header", stale_mock), \
+         patch.object(st, "markdown") as mock_markdown:
+        # Should not raise TypeError despite stale_mock raising on badge_text
+        render_header(
+            title="Overview & Dataset Ingestion",
+            subtitle="Test subtitle",
+            icon="📊",
+            badge_text="LIVE MONITORING",
+        )
+        assert stale_mock.call_count >= 2
+        assert mock_markdown.called
+
+
+
 

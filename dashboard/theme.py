@@ -1,6 +1,6 @@
 """DataPulse AI — Dashboard Theme, Design System & TicketVault-Inspired Aesthetics."""
 
-from typing import Optional
+from typing import Any, Optional
 import streamlit as st
 
 
@@ -540,8 +540,15 @@ def render_header(
     subtitle: str,
     icon: str = "",
     badge_text: Optional[str] = None,
+    backend_status: Optional[str] = None,
+    backend_online: bool = True,
+    **kwargs: Any,
 ) -> None:
-    """Render consistent, professional TicketVault-style page header."""
+    """Render consistent, professional TicketVault-style page header.
+
+    Supports TicketVault badge pills (`badge_text`), legacy backend status indicators,
+    and arbitrary keyword arguments to ensure robust compatibility across deployments.
+    """
     badge_html = f'<span class="tv-badge-crimson" style="margin-left: 10px;">{badge_text}</span>' if badge_text else ""
     st.markdown(
         f"""
