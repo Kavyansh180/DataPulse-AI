@@ -18,11 +18,17 @@ pipeline {
         stage('Python Dependencies & Tests') {
             steps {
                 bat '''
-                    py -3 -m venv .venv
+                    @echo off
+                    "C:\\Users\\hp\\AppData\\Local\\Programs\\Python\\Python310\\python.exe" --version
+                    "C:\\Users\\hp\\AppData\\Local\\Programs\\Python\\Python310\\python.exe" -m venv .venv
+
                     call .venv\\Scripts\\activate.bat
+
                     python -m pip install --upgrade pip
                     pip install -r requirements.txt
                     python -m pytest -v
+
+                    if errorlevel 1 exit /b 1
                 '''
             }
         }
@@ -30,7 +36,9 @@ pipeline {
         stage('Build Docker Container') {
             steps {
                 bat '''
+                    docker --version
                     docker build --provenance=false --platform linux/amd64 -t datapulse-ai:test .
+                    if errorlevel 1 exit /b 1
                 '''
             }
         }
@@ -38,10 +46,15 @@ pipeline {
 
     post {
         success {
-            echo 'DataPulse AI tests and Docker build completed successfully. No AWS deployment was performed.'
+            echo 'SUCCESS: DataPulse AI tests and Docker build completed. No AWS deployment was performed.'
         }
+
         failure {
-            echo 'Build failed. No AWS deployment was performed.'
+            echo 'FAILURE: The build or tests failed. No AWS deployment was performed.'
+        }
+
+        always {
+            echo 'Pipeline execution finished.'
         }
     }
 }
