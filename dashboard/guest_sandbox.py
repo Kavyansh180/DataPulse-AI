@@ -162,3 +162,69 @@ def apply_guest_remediation(
         "remaining_issues": remaining,
         "remediated_df": working_df,
     }
+
+
+def analyze_guest_dataset_with_gemini(
+    profile_result: Dict[str, Any],
+    api_key: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Execute live in-memory Gemini root-cause analysis on guest dataset if API key is configured.
+    Respects privacy safeguards and never transmits raw dataset rows."""
+    import os
+    import json
+    import logging
+    from app.core.config import get_settings
+    from app.services.llm_provider import GeminiProvider
+    from app.services.ai_analysis_service import AIAnalysisService
+
+    settings = get_settings()
+    resolved_key = (
+        api_key
+        or os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("LLM_API_KEY")
+        or settings.effective_gemini_api_key
+    )
+    if not resolved_key or not str(resolved_key).strip():
+        return None
+
+    # Construct privacy-safe evidence strictly from aggregated statistics
+    col_metrics: Dict[str, Dict[str, Any]] = {}
+    for m in profile_result.get("metrics", []):
+        col = m.get("column_name")
+        if col:
+            is_sensitive = AIAnalysisService._is_sensitive_column(col)
+            display_col = "[REDACTED_SENSITIVE_COLUMN]" if is_sensitive else col
+            if display_col not in col_metrics:
+                col_metrics[display_col] = {}
+            col_metrics[display_col][m["metric_name"]] = m["metric_value"]
+
+    evidence = {
+        "dataset_name": profile_result.get("dataset_name", "guest_sandbox_dataset"),
+        "total_rows_profiled": profile_result.get("total_rows_profiled", 0),
+        "total_columns_profiled": profile_result.get("total_columns_profiled", 0),
+        "quality_score": profile_result.get("quality_score", 0.0),
+        "component_scores": profile_result.get("component_scores", {}),
+        "score_explanation": profile_result.get("score_explanation", ""),
+        "column_metrics": col_metrics,
+        "quality_issues": profile_result.get("issues", [])[:20],
+    }
+
+    user_prompt = AIAnalysisService.build_user_prompt(evidence)
+    provider = GeminiProvider(settings=settings)
+
+    try:
+        raw_text = provider.generate(prompt=user_prompt, system_prompt=AIAnalysisService.SYSTEM_PROMPT)
+        cleaned = raw_text.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        elif cleaned.startswith("```"):
+            cleaned = cleaned[3:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        parsed = json.loads(cleaned.strip())
+        parsed["is_sample_demo"] = False
+        parsed["generated_at"] = "Just now (Live Gemini Analysis)"
+        return parsed
+    except Exception as exc:
+        logging.getLogger("datapulse.guest_sandbox").warning("Guest live Gemini analysis failed: %s", exc)
+        return None

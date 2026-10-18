@@ -306,6 +306,8 @@ def display_ai_analysis_report(analysis: Dict[str, Any]) -> None:
                 evidence = r.get("evidence", "")
 
                 badge_cls = "tv-badge-crimson" if priority == "HIGH" else ("tv-badge-amber" if priority == "MEDIUM" else "tv-badge-cyan")
+                trade_offs = r.get("trade_offs")
+                trade_offs_html = f'<p style="color: #fbbf24; font-size: 0.83rem; margin: 4px 0 0 0;"><strong>Trade-offs:</strong> {trade_offs}</p>' if trade_offs else ""
 
                 st.markdown(
                     f"""
@@ -315,6 +317,7 @@ def display_ai_analysis_report(analysis: Dict[str, Any]) -> None:
                         </div>
                         <p style="color: #ffffff; font-size: 0.95rem; font-weight: 600; margin: 0 0 6px 0;">{action}</p>
                         <p style="color: #cbd5e1; font-size: 0.85rem; margin: 0;"><strong>Reason:</strong> {evidence}</p>
+                        {trade_offs_html}
                     </div>
                     """,
                     unsafe_allow_html=True,

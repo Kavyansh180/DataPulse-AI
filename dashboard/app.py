@@ -41,6 +41,7 @@ try:
         profile_guest_dataset,
         simulate_guest_remediation,
         apply_guest_remediation,
+        analyze_guest_dataset_with_gemini,
     )
     from dashboard.components import (
         render_score_gauge,
@@ -74,6 +75,7 @@ except ImportError:
         profile_guest_dataset,
         simulate_guest_remediation,
         apply_guest_remediation,
+        analyze_guest_dataset_with_gemini,
     )
     from components import (  # type: ignore
         render_score_gauge,
@@ -900,22 +902,50 @@ elif active_view == "AI Root-Cause Diagnostics":
     )
 
     if st.session_state.is_guest:
-        st.markdown(
-            """
-            <div class="tv-card" style="margin-bottom: 1.25rem; border-color: rgba(168, 85, 247, 0.35); background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(13, 19, 31, 0.95) 100%);">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                    <span class="tv-badge-purple">DEMO AI REPORT</span>
-                    <span class="tv-badge-emerald">Fact-Checked & Grounded</span>
-                </div>
-                <p style="color: #cbd5e1; font-size: 0.92rem; margin: 0; line-height: 1.5;">
-                    Below is an interactive sample report showing how DataPulse AI pinpoints root causes of errors, separates verified facts from likely causes, and provides step-by-step fix recommendations.
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True,
+        if st.session_state.guest_data is None:
+            st.session_state.guest_data = profile_guest_dataset(load_default_guest_dataset())
+
+        # Check if local Gemini API key is configured
+        import os
+        has_gemini_key = bool(
+            os.environ.get("GEMINI_API_KEY")
+            or os.environ.get("LLM_API_KEY")
         )
-        demo_report = get_sample_ai_report(dataset_name="synthetic_customer_orders_sandbox", run_id=1)
-        display_ai_analysis_report(demo_report)
+
+        if has_gemini_key:
+            col_g_ai, col_g_demo = st.columns([1.2, 1], gap="medium")
+            with col_g_ai:
+                if st.button("🤖 Run Live Gemini Analysis (In-Memory)", type="primary", use_container_width=True):
+                    with st.spinner("Analyzing in-memory data with Google Gemini..."):
+                        live_res = analyze_guest_dataset_with_gemini(st.session_state.guest_data)
+                        if live_res:
+                            st.session_state.guest_ai_result = live_res
+                            st.success("✓ Live Gemini analysis completed in-memory!")
+                        else:
+                            st.warning("⚠️ Live Gemini call did not return a valid response. Showing demonstration report instead.")
+                            st.session_state.guest_ai_result = get_sample_ai_report(dataset_name="synthetic_customer_orders_sandbox", run_id=1)
+            with col_g_demo:
+                if st.button("📖 View Pre-recorded Report (Demo)", type="secondary", use_container_width=True):
+                    st.session_state.guest_ai_result = get_sample_ai_report(dataset_name="synthetic_customer_orders_sandbox", run_id=1)
+                    st.success("✓ Loaded demonstration sample report.")
+        else:
+            st.markdown(
+                """
+                <div class="tv-card" style="margin-bottom: 1.25rem; border-color: rgba(168, 85, 247, 0.35); background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(13, 19, 31, 0.95) 100%);">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <span class="tv-badge-purple">DEMO AI REPORT</span>
+                        <span class="tv-badge-emerald">Fact-Checked & Grounded</span>
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 0.92rem; margin: 0; line-height: 1.5;">
+                        Below is a demonstration report showing how DataPulse AI pinpoints root causes of errors, trade-offs, and step-by-step fix recommendations. To run live in-memory Gemini analysis, set <code>GEMINI_API_KEY</code> in your environment.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        active_report = st.session_state.get("guest_ai_result") or get_sample_ai_report(dataset_name="synthetic_customer_orders_sandbox", run_id=1)
+        display_ai_analysis_report(active_report)
     else:
         try:
             datasets = client.list_datasets()
@@ -986,10 +1016,10 @@ elif active_view == "AI Root-Cause Diagnostics":
                                 or "API_KEY" in (exc.message or "").upper()
                             ):
                                 st.warning(
-                                    "⚠️ **AI Diagnostics Notice**: No OpenAI API key is currently configured on the backend "
-                                    "(`LLM_NOT_CONFIGURED`). Live AI recommendations require `LLM_API_KEY` to be set in environment variables.\n\n"
+                                    "⚠️ **AI Diagnostics Notice**: No Gemini or LLM API key is currently configured on the backend "
+                                    "(`LLM_NOT_CONFIGURED`). Live AI recommendations require `GEMINI_API_KEY` (or `LLM_API_KEY`) to be set in environment variables or cloud secrets.\n\n"
                                     "👉 Click **📖 View Sample AI Report (Demo)** above to explore a full demonstration report "
-                                    "illustrating how DataPulse AI pinpoints root causes and suggests fixes."
+                                    "illustrating how DataPulse AI pinpoints root causes, trade-offs, and suggested fixes."
                                 )
                             elif exc.status_code == 401:
                                 handle_api_error(exc)

@@ -33,24 +33,40 @@ logger = logging.getLogger("datapulse.ai_analysis")
 class AIAnalysisService:
     """Service orchestrating AI-driven root-cause analysis on completed profiling runs."""
 
+    SENSITIVE_COLUMN_PATTERNS = (
+        "password", "passwd", "secret", "token", "ssn", "social_security",
+        "credit_card", "card_num", "cvv", "auth_key", "private_key", "api_key"
+    )
+
     SYSTEM_PROMPT = (
         "You are DataPulse AI's Lead Data Quality Diagnostics Engine. "
         "Your task is to analyze empirical data quality profiling metrics, anomalies, and issues "
-        "and generate an objective, explainable root-cause analysis with actionable remediation recommendations.\n\n"
+        "and generate an objective, explainable, and business-friendly dataset-quality report.\n\n"
         "STRICT DIAGNOSTIC RULES:\n"
-        "1. GROUNDING: Every finding and recommendation must be grounded strictly in the provided profiling evidence. "
-        "Never invent columns, sample values, or metrics that are not in the evidence.\n"
-        "2. HYPOTHESES: Clearly distinguish observed empirical facts from possible explanations. "
-        "Label all root causes as hypotheses unless definitive evidence is present.\n"
-        "3. ACTIONABILITY: Recommend practical, prioritized corrective actions (priority: 'high', 'medium', or 'low') "
-        "and cite the exact profiling evidence (e.g., column names, null percentages, outlier counts) justifying each.\n"
-        "4. UNCERTAINTIES & LIMITATIONS: Acknowledge diagnostic limitations (e.g., lack of upstream ETL logs, unknown business domain rules).\n"
-        "5. OUTPUT FORMAT: Respond ONLY with a valid JSON object matching the requested schema. Do not include markdown code fences or conversational text."
+        "1. GROUNDING: Every finding and recommendation must be grounded strictly in the provided profiling statistics. "
+        "Never invent columns, sample row values, or metrics that are not in the evidence.\n"
+        "2. HYPOTHESES: Clearly distinguish observed empirical facts from possible causes. "
+        "Label all root causes as hypotheses (is_hypothesis: true) unless verified by direct evidence.\n"
+        "3. ACTIONABILITY & TRADE-OFFS: Recommend practical remediation strategies for missing values, duplicates, "
+        "invalid values, inconsistent text, and numeric outliers. For each recommendation, assign a priority ('high', 'medium', or 'low'), "
+        "cite the exact statistical evidence justifying it, and explain the trade-offs (e.g., potential information loss, downstream impact).\n"
+        "4. PRIVACY: Work solely with aggregated statistics. Never request or generate raw personal credentials or sensitive row data.\n"
+        "5. UNCERTAINTIES & LIMITATIONS: Acknowledge diagnostic limitations (e.g., lack of upstream ETL logs, unknown business domain rules).\n"
+        "6. OUTPUT FORMAT: Respond ONLY with a valid JSON object matching the requested schema. Do not include markdown code fences or conversational text."
     )
 
     @classmethod
+    def _is_sensitive_column(cls, col_name: Optional[str]) -> bool:
+        """Check if column name indicates credentials, payment info, or sensitive PII."""
+        if not col_name:
+            return False
+        col_lower = col_name.lower().strip()
+        return any(pat in col_lower for pat in cls.SENSITIVE_COLUMN_PATTERNS)
+
+    @classmethod
     def prepare_evidence(cls, run: ProfilingRun, db: Session) -> Dict[str, Any]:
-        """Aggregate all empirical profiling evidence, metrics, issues, and historical shifts."""
+        """Aggregate all empirical profiling evidence, metrics, issues, and historical shifts.
+        Transmits only aggregated quality statistics—never raw dataset rows or credentials."""
         dataset_version = run.dataset_version
         dataset = dataset_version.dataset if dataset_version else None
 
@@ -62,27 +78,33 @@ class AIAnalysisService:
             except Exception:
                 pass
 
-        # 2. Granular metrics & anomalies
+        # 2. Granular metrics & anomalies (privacy-filtered)
         table_metrics = {}
         column_metrics: Dict[str, Dict[str, Any]] = {}
         anomalies = []
 
         for m in run.metrics:
-            if m.column_name is None:
+            col = m.column_name
+            is_sensitive = cls._is_sensitive_column(col)
+
+            if col is None:
                 table_metrics[m.metric_name] = m.metric_value
             else:
-                col = m.column_name
-                if col not in column_metrics:
-                    column_metrics[col] = {}
-                column_metrics[col][m.metric_name] = m.metric_value
+                display_col = "[REDACTED_SENSITIVE_COLUMN]" if is_sensitive else col
+                if display_col not in column_metrics:
+                    column_metrics[display_col] = {}
+                column_metrics[display_col][m.metric_name] = m.metric_value
 
             if m.is_anomalous:
+                display_col = "[REDACTED_SENSITIVE_COLUMN]" if is_sensitive else (col or "table_level")
+                # Do not pass raw sample values from details if column is sensitive
+                safe_details = "[Details omitted for sensitive column]" if is_sensitive else m.details
                 anomalies.append({
-                    "column": m.column_name or "table_level",
+                    "column": display_col,
                     "metric": m.metric_name,
                     "value": m.metric_value,
                     "threshold": m.threshold_value,
-                    "details": m.details,
+                    "details": safe_details,
                 })
 
         # 3. Quality issues
@@ -182,7 +204,8 @@ class AIAnalysisService:
             "    {\n"
             '      "action": "Specific remediation step for engineering or data owners.",\n'
             '      "priority": "high",\n'
-            '      "evidence": "Metric or issue triggering this priority."\n'
+            '      "evidence": "Metric or issue triggering this priority.",\n'
+            '      "trade_offs": "Trade-offs and potential data impact (e.g. loss of records vs. completeness)."\n'
             "    }\n"
             "  ],\n"
             '  "limitations": ["Limitation or uncertainty 1", "Limitation 2"]\n'
@@ -252,11 +275,19 @@ class AIAnalysisService:
                 message="LLM provider rate limit exceeded. Please try again later.",
                 code="LLM_RATE_LIMIT",
             )
-        except LLMProviderError as err:
-            logger.error(f"AI Root-Cause Analysis provider error: {err}")
+        except LLMResponseFormatError as err:
+            logger.error("AI Root-Cause Analysis format error [%s]: %s", err.__class__.__name__, err)
             raise APIError(
                 status_code=502,
-                message="LLM provider communication failed.",
+                message=f"LLM provider returned invalid format: {err}",
+                code="LLM_FORMAT_ERROR",
+            )
+        except LLMProviderError as err:
+            logger.error("AI Root-Cause Analysis provider error [%s]: %s", err.__class__.__name__, err)
+            safe_detail = str(err).strip()
+            raise APIError(
+                status_code=502,
+                message=f"LLM provider communication failed: {safe_detail}" if safe_detail else "LLM provider communication failed.",
                 code="LLM_PROVIDER_ERROR",
             )
         except Exception as err:

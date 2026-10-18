@@ -31,8 +31,8 @@ Experience the live interactive application:
 - **Deterministic Remediation Previews**: Simulates data corrections on DataFrame deep copies (`df.copy(deep=True)`). Supports missing value imputation (`mean`, `median`, `mode`, `constant`), duplicate row dropping, whitespace trimming, empty string normalization, data type coercion (`reject` or `preserve_as_null`), and numeric outlier capping.
 - **Cryptographic Preview Tokens & Source Immutability**: Binds proposed operations to a 24-character SHA-256 preview token (`prev_{run_id}_{hash}`). The original CSV in Amazon S3 is never overwritten; approved corrections are written to a dedicated S3 object key (`_remediated.csv`) as a new dataset version.
 - **Automated Revalidation**: Automatically re-profiles corrected datasets upon application to compute empirical score improvement ($\Delta$), resolved issues, and remaining defects.
-- **Historical Run Comparison**: Compares any two profiling runs on a dataset to detect schema drift (added/removed columns), metric shifts, and newly introduced vs. resolved issues.
-- **AI Root-Cause Diagnostics**: Translates statistical metrics into human-readable diagnostics with factually grounded prompt engineering and structured Pydantic output, distinguishing verified facts from hypotheses (`is_hypothesis: true`).
+- **AI-Powered Diagnostics & Remediation Intelligence**: Integrates **Google Gemini AI** (using the official `google-genai` SDK with `gemini-2.5-flash`) to generate explainable root-cause analyses, dataset health summaries, and actionable remediation strategies with itemized trade-offs. Distinguishes verified statistical facts from hypotheses (`is_hypothesis: true`), and strictly separates recommendations from deterministic execution.
+- **Human-in-the-Loop Remediation**: AI models only propose changes; all data transformations are executed deterministically with explicit user approval, cryptographic preview tokens, and comprehensive audit history.
 - **Multi-Tenant Authentication & Ownership**: Secure user registration and login with Argon2id password hashing, algorithm-pinned JWTs (`HS256`), and per-user dataset isolation.
 - **Isolated Guest Sandbox Mode**: A 100% in-memory profiling and remediation engine bundled with synthetic customer order data, allowing immediate exploration with zero database or AWS dependencies.
 
@@ -73,14 +73,14 @@ flowchart TD
         Lambda --> AIDiag
     end
 
-    subgraph Storage ["Cloud Infrastructure"]
+    subgraph Storage ["Cloud Infrastructure & AI"]
         NeonDB[("Neon PostgreSQL\n(Users, Runs, Issues, Audit)")]
         S3Bucket[("Amazon S3\n(Raw & Remediated CSVs)")]
-        LLMProvider["OpenAI-Compatible LLM\n(OpenAI / Groq / Local)"]
+        GeminiAI["Google Gemini AI\n(gemini-2.5-flash via google-genai)"]
         
         Lambda --> NeonDB
         Remediation --> S3Bucket
-        AIDiag --> LLMProvider
+        AIDiag --> GeminiAI
     end
 ```
 
@@ -95,7 +95,7 @@ flowchart TD
 | **Data Processing** | [Pandas](https://pandas.pydata.org/), [NumPy](https://numpy.org/), [Pandera](https://unionai-oss.github.io/pandera/) |
 | **Database & Storage** | [PostgreSQL (Neon)](https://neon.tech/), [SQLAlchemy 2.0](https://www.sqlalchemy.org/), [Alembic](https://alembic.sqlalchemy.org/), [Amazon S3 (Boto3)](https://aws.amazon.com/s3/) |
 | **Security & Auth** | [Argon2id (`argon2-cffi`)](https://pypi.org/project/argon2-cffi/), [PyJWT](https://pyjwt.readthedocs.io/) (`HS256` pinned) |
-| **AI Diagnostics** | [HTTPX](https://www.python-httpx.org/), OpenAI-compatible REST API (OpenAI, Groq, Ollama) |
+| **AI Diagnostics** | [Google Gen AI SDK](https://github.com/googleapis/python-genai) (`google-genai`), Google Gemini (`gemini-2.5-flash`), HTTPX fallback |
 | **Deployment & CI/CD** | [Docker](https://www.docker.com/), [AWS Lambda](https://aws.amazon.com/lambda/), [Amazon API Gateway](https://aws.amazon.com/api-gateway/), [Jenkins](https://www.jenkins.io/) (`Jenkinsfile`) |
 
 ---
@@ -123,7 +123,7 @@ DataPulse-AI/
 │   ├── images/           # Dashboard screenshots and visual documentation
 │   └── DEPLOYMENT_AWS.md # Production AWS CLI deployment guide (ap-south-1)
 ├── sample_data/          # Bundled synthetic customer orders dataset
-├── tests/                # 142 automated tests with offline SQLite test doubles
+├── tests/                # 160 automated tests with offline SQLite & mock providers
 ├── Dockerfile            # Multi-stage Linux container image for AWS Lambda
 ├── Jenkinsfile           # CI/CD pipeline with automated testing and deployment gates
 ├── requirements.txt      # Complete application dependencies
@@ -180,7 +180,7 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 ## Automated Testing
 
-DataPulse AI includes a test suite using isolated SQLite test doubles, allowing the entire suite to run offline without live database or cloud secrets:
+DataPulse AI includes a test suite using isolated SQLite test doubles and mocked LLM providers, allowing the entire suite to run offline without live database or cloud secrets:
 
 ```powershell
 pytest -v
@@ -188,24 +188,27 @@ pytest -v
 
 **Test Verification Status**:
 ```
-======================= 142 passed, 1 warning in 24.26s =======================
+======================= 160 passed, 1 warning in 11.29s =======================
 ```
 
-The 142 automated tests cover:
+The 160 automated tests cover:
 - JWT generation, expiration, signature tampering, and algorithm pinning
 - Password hashing with Argon2id and user registration/login flows
 - Pure Pandas statistical profiling, IQR outlier bounds, and score edge cases
 - Cryptographic remediation preview tokens, tamper rejection, and data immutability
 - Deep-copy remediation transformations (imputation, deduplication, casting, capping)
-- AI analysis factual prompt assembly and structured response parsing
+- Google Gemini AI integration: SDK provider handling, rate limits (429), timeouts, auth errors, and response formatting
+- Privacy safeguards: redaction of sensitive columns (`password`, `token`, `ssn`, `secret`) and suppression of raw tabular row transmission
+- AI recommendation trade-off schemas and human-in-the-loop preview isolation
 - AWS Lambda Mangum handler initialization and CORS headers
-- Guest sandbox isolation under invalid or missing database configurations
+- Guest sandbox isolation under invalid or missing database configurations, with graceful AI fallback
 
 ---
 
 ## Security & Isolation Notes
 
-- **Guest Sandbox Isolation**: In Guest Mode, all profiling, calculations, and remediation transformations execute **100% in-memory** on local pandas DataFrames. No data is sent to external APIs, written to Neon PostgreSQL, or stored in Amazon S3.
-- **Production Secrets**: Do not commit `.env` files or hardcode cloud credentials. Production deployments pull credentials securely via environment variables or AWS Systems Manager (SSM) Parameter Store.
-- **Data Immutability**: All remediation workflows strictly prohibit in-place mutation of uploaded raw CSV files. Every applied remediation results in an independent, version-tagged S3 object and an immutable audit log record.
+- **Guest Sandbox Isolation**: In Guest Mode, all profiling, calculations, and remediation transformations execute **100% in-memory** on local pandas DataFrames. No data is sent to external APIs, written to Neon PostgreSQL, or stored in Amazon S3. If `GEMINI_API_KEY` is not present, the sandbox gracefully displays a pre-computed diagnostic report without raising errors or crashing.
+- **Privacy by Design (AI Diagnostics)**: Gemini receives **only** aggregated dataset statistics (row counts, null percentages, IQR outlier counts, column datatypes). Raw row values, CSV files, credentials, and sensitive column names matching patterns like `token`, `password`, `ssn`, or `secret` are automatically masked and never transmitted to the LLM.
+- **Production Secrets**: Do not commit `.env` files or hardcode cloud credentials. Production deployments pull credentials securely via environment variables or AWS Systems Manager (SSM) Parameter Store (`/datapulse/production/GEMINI_API_KEY`).
+- **Data Immutability & Determinism**: All remediation workflows strictly prohibit in-place mutation of uploaded raw CSV files. AI cannot execute remediation directly; every applied remediation requires explicit user approval, cryptographic preview token verification, and results in an independent, version-tagged S3 object with an immutable audit log record.
 - **Payload & File Guards**: Multipart uploads are restricted by size limits (10 MB via API Gateway, 50 MB application cap), filename sanitization, and encoding validation to prevent buffer exhaustion and path-traversal exploits.

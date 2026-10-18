@@ -35,6 +35,12 @@ Parameters:
       Comma-separated allowed origins for CORS (e.g. https://your-streamlit-app.streamlit.app).
       Defaults to '*' for open development.
 
+  GeminiApiKey:
+    Type: String
+    Default: ""
+    NoEcho: true
+    Description: Optional API key for Google Gemini AI diagnostics.
+
   LlmApiKey:
     Type: String
     Default: ""
@@ -43,12 +49,12 @@ Parameters:
 
   LlmProvider:
     Type: String
-    Default: "openai"
-    Description: LLM provider name (e.g., openai, groq, generic).
+    Default: "gemini"
+    Description: LLM provider name (e.g., gemini, openai, groq).
 
   LlmModel:
     Type: String
-    Default: "gpt-4o-mini"
+    Default: "gemini-2.5-flash"
     Description: LLM model identifier.
 
   LlmApiBase:
@@ -134,6 +140,7 @@ Resources:
           DB_POOL_TIMEOUT: "15"
           DB_POOL_RECYCLE: "600"
           S3_BUCKET_NAME: !Ref DataPulseStorageBucket
+          GEMINI_API_KEY: !Ref GeminiApiKey
           LLM_PROVIDER: !Ref LlmProvider
           LLM_MODEL: !Ref LlmModel
           LLM_API_KEY: !Ref LlmApiKey

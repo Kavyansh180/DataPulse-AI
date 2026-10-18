@@ -31,6 +31,10 @@ class Recommendation(BaseModel):
         ...,
         description="Empirical profiling metrics or issue observations directly justifying this action",
     )
+    trade_offs: Optional[str] = Field(
+        default=None,
+        description="Trade-offs, potential information loss, or downstream implications of applying this recommendation",
+    )
 
 
 class LikelyCause(BaseModel):

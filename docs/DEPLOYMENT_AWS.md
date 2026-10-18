@@ -103,17 +103,26 @@ aws ssm put-parameter `
   --overwrite `
   --region $REGION
 
-# 2. Store LLM API Key (SecureString)
+# 2. Store Gemini API Key (SecureString)
+aws ssm put-parameter `
+  --name "/datapulse/production/GEMINI_API_KEY" `
+  --type "SecureString" `
+  --value "$env:GEMINI_API_KEY" `
+  --description "Google Gemini API key for AI diagnostics and remediation recommendations" `
+  --overwrite `
+  --region $REGION
+
+# 3. Store Optional Legacy LLM API Key (if using OpenAI / Groq fallback)
 aws ssm put-parameter `
   --name "/datapulse/production/LLM_API_KEY" `
   --type "SecureString" `
   --value "$env:LLM_API_KEY" `
-  --description "API key for LLM root cause analysis provider" `
+  --description "API key for fallback LLM root cause analysis provider" `
   --overwrite `
   --region $REGION
 ```
 
-*(Alternative: If using AWS Secrets Manager, create secret `datapulse/production/secrets` with JSON payload `{"DATABASE_URL":"...","LLM_API_KEY":"..."}` and set `SECRETS_MANAGER_SECRET_ID=datapulse/production/secrets`).*
+*(Alternative: If using AWS Secrets Manager, create secret `datapulse/production/secrets` with JSON payload `{"DATABASE_URL":"...","GEMINI_API_KEY":"...","LLM_API_KEY":"..."}` and set `SECRETS_MANAGER_SECRET_ID=datapulse/production/secrets`).*
 
 ### B. Neon Connection Pooler & Lambda Concurrency Settings
 Neon serverless Postgres requires using the **pooled connection endpoint** (`-pooler.`) for Lambda:
@@ -423,8 +432,8 @@ $EnvConfig = @{
     DB_POOL_RECYCLE = "600"
     MAX_UPLOAD_SIZE_BYTES = "10485760"
     MAX_ROW_COUNT_LIMIT = "1000000"
-    LLM_PROVIDER = "openai"
-    LLM_MODEL = "gpt-4o-mini"
+    LLM_PROVIDER = "gemini"
+    LLM_MODEL = "gemini-2.5-flash"
   }
 }
 

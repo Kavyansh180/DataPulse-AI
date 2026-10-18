@@ -57,9 +57,10 @@ class Settings(BaseSettings):
     S3_ENDPOINT_URL: Optional[str] = Field(default=None, description="Custom S3 endpoint URL (MinIO/LocalStack/testing)")
 
     # AI Root-Cause Analysis (LLM Integration)
-    LLM_PROVIDER: str = Field(default="openai", description="LLM provider name (e.g., openai, groq, generic)")
-    LLM_API_KEY: Optional[str] = Field(default=None, description="API key for LLM provider")
-    LLM_MODEL: str = Field(default="gpt-4o-mini", description="LLM model name to invoke")
+    LLM_PROVIDER: str = Field(default="openai", description="LLM provider name (e.g., gemini, openai, groq, generic)")
+    LLM_API_KEY: Optional[str] = Field(default=None, description="API key for generic/OpenAI LLM provider")
+    GEMINI_API_KEY: Optional[str] = Field(default=None, description="Dedicated Google Gemini API key")
+    LLM_MODEL: str = Field(default="gemini-3.8-flash", description="LLM model name to invoke (e.g., gemini-3.8-flash, gpt-4o-mini)")
     LLM_API_BASE: Optional[str] = Field(default=None, description="Custom base URL for LLM API (e.g., OpenAI/Groq/OpenRouter)")
     LLM_TIMEOUT_SECONDS: float = Field(default=30.0, ge=1.0, le=120.0, description="Request timeout for LLM calls in seconds")
 
@@ -127,6 +128,11 @@ class Settings(BaseSettings):
         """Check if current database is SQLite (e.g., in unit tests)."""
         return self.DATABASE_URL.startswith("sqlite")
 
+    @property
+    def effective_gemini_api_key(self) -> Optional[str]:
+        """Resolve Gemini API key: checks GEMINI_API_KEY first, falls back to LLM_API_KEY."""
+        return self.GEMINI_API_KEY or self.LLM_API_KEY
+
     def load_ssm_parameters(self) -> None:
         """Fetch secure credentials from AWS SSM Parameter Store if SSM_PARAMETER_PATH is set."""
         if not self.SSM_PARAMETER_PATH or not self.SSM_PARAMETER_PATH.strip():
@@ -149,6 +155,8 @@ class Settings(BaseSettings):
                     self.DATABASE_URL = self.normalize_database_url(param_value)
                 elif param_name == "LLM_API_KEY" and param_value:
                     self.LLM_API_KEY = param_value
+                elif param_name == "GEMINI_API_KEY" and param_value:
+                    self.GEMINI_API_KEY = param_value
                 elif param_name == "JWT_SECRET_KEY" and param_value:
                     self.JWT_SECRET_KEY = param_value
         except Exception as exc:
@@ -181,6 +189,8 @@ class Settings(BaseSettings):
                             self.DATABASE_URL = self.normalize_database_url(str(secret_dict["DATABASE_URL"]))
                         if "LLM_API_KEY" in secret_dict and secret_dict["LLM_API_KEY"]:
                             self.LLM_API_KEY = str(secret_dict["LLM_API_KEY"])
+                        if "GEMINI_API_KEY" in secret_dict and secret_dict["GEMINI_API_KEY"]:
+                            self.GEMINI_API_KEY = str(secret_dict["GEMINI_API_KEY"])
                         if "JWT_SECRET_KEY" in secret_dict and secret_dict["JWT_SECRET_KEY"]:
                             self.JWT_SECRET_KEY = str(secret_dict["JWT_SECRET_KEY"])
                 except json.JSONDecodeError:

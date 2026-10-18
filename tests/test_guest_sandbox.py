@@ -134,3 +134,52 @@ def test_guest_sandbox_all_remediation_transformations_in_memory():
     assert out_df["num"].max() <= 100.0
     # Check trimming
     assert out_df.loc[0, "txt"] == "apple"
+
+
+def test_guest_sandbox_gemini_analysis_without_key_returns_none(monkeypatch):
+    """Verify analyze_guest_dataset_with_gemini returns None gracefully when no key is set."""
+    from dashboard.guest_sandbox import analyze_guest_dataset_with_gemini
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", None)
+    monkeypatch.setattr(settings, "LLM_API_KEY", None)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+
+    fake_profile = {"dataset_name": "test", "total_rows_profiled": 10, "quality_score": 90.0}
+    res = analyze_guest_dataset_with_gemini(fake_profile)
+    assert res is None
+
+
+def test_guest_sandbox_gemini_analysis_mocked_success(monkeypatch):
+    """Verify analyze_guest_dataset_with_gemini parses and returns report when key is present."""
+    import json
+    from unittest.mock import MagicMock, patch
+    from dashboard.guest_sandbox import analyze_guest_dataset_with_gemini
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "AIzaSyMockKeyForGuestTest")
+    monkeypatch.setenv("GEMINI_API_KEY", "AIzaSyMockKeyForGuestTest")
+
+    mock_resp = json.dumps({
+        "overall_assessment": "Guest dataset has clean schema with minor nulls.",
+        "key_findings": ["No duplicate rows found."],
+        "likely_causes": [],
+        "recommendations": [{"action": "Fill nulls", "priority": "medium", "evidence": "2 nulls"}],
+        "limitations": [],
+    })
+
+    with patch("app.services.llm_provider.GeminiProvider.generate", return_value=mock_resp):
+        fake_profile = {
+            "dataset_name": "guest_synthetic",
+            "total_rows_profiled": 31,
+            "quality_score": 97.8,
+            "metrics": [{"column_name": "email", "metric_name": "missing_percentage", "metric_value": 3.0}],
+            "issues": [],
+        }
+        res = analyze_guest_dataset_with_gemini(fake_profile)
+        assert res is not None
+        assert "clean schema" in res["overall_assessment"]
+        assert res["is_sample_demo"] is False
