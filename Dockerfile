@@ -10,8 +10,8 @@ WORKDIR ${LAMBDA_TASK_ROOT}
 # Copy backend requirements first to optimize Docker layer caching
 COPY requirements-backend.txt .
 
-# Install dependencies directly into LAMBDA_TASK_ROOT
-RUN pip install --no-cache-dir -r requirements-backend.txt --target "${LAMBDA_TASK_ROOT}"
+# Install dependencies directly into LAMBDA_TASK_ROOT with network timeout and retries
+RUN pip install --no-cache-dir --timeout 120 --retries 5 -r requirements-backend.txt --target "${LAMBDA_TASK_ROOT}"
 
 # Copy application package
 COPY app/ ${LAMBDA_TASK_ROOT}/app/
